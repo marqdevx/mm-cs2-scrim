@@ -1,45 +1,33 @@
-## DISCLAIMER: This plugin is *not* meant to be used on a server yet, it is very much a work in progress and thus we are *not* responsible for any issues or breakages caused by the plugin. In addition, we will *not* provide support for building or usage unless you plan on contributing to the project yourself.
+## This repository is just a tweak of https://github.com/Source2ZE/CS2Fixes/
+Removing "unnecessary" features from the original addon, to have the minimum to just run the commands.
 
-# CS2Fixes
+## DISCLAIMER: *not* responsible for any issues or breakages caused by the plugin. 
 
-CS2Fixes is a collection of experimental fixes and features aimed but not limited to zombie escape. This project is not production ready and serves as a proof of concept and help for source2mod and other developers.
+# Competitive Practice & Scrim for CS2
+This plugin adds the minimum requirements for competitive teams that need a more handy way of managing a few commands from the server side, like config management or replay recording.
+
+## Available Commands
+
+`.pracc`: launch the practice config  
+`.scrim`: start the competitive match  
+`.pause`: pauses the match  
+`.unpause`: request the unpause  
+`.record`: start the demo recording  
+`.stoprecord`: finish the recording and save it under `gotv/<date>.dem`  
+`.restore <round>`: load the desired round's backup  
 
 ## Roadmap
-- [x] Metamod implementation
-- [x] Windows and Linux support
-- [x] Schema system
-  - [x] Property access
-  - [x] Property updating
-- [x] Event hooking
-- [x] Coloring console chat messages
-- [x] Movement unlocker
-- [x] VScript unlocker
-- [x] Preventing console logs
-- [x] Buying weapons through chat
-- [x] Unlocking commands and convars
-- [x] Memory patching system
-- [x] Detour system
-- [x] Player Manager
-  - [x] Storing players
-  - [x] Player authorization
-  - [ ] Userid Target lookup
-  - [x] Admin system
-    - [x] Admin commands
-    - [ ] Infractions
-      - [x] Kick
-      - [x] Ban
-      - [x] Mute
-      - [ ] Gag
-      - [ ] Removing infractions
-- [x] Timers
-- [x] Blocking weapon sounds/decals
-  - [x] Hooking fire bullets tempent
-  - [x] Implement stopsound
-- [x] Legacy event listener
-- [x] Weapon pickup crash fix
-- [x] trigger_push fix
-- [ ] Remove player collisions
-- [x] Ztele
+- Scrim
+  - [X] Pauses
+  - [X] Medic (round backup)
+  - [ ] Coach
+  - [X] gotv .record
+- Practice
+  - [X] Map
+  - [ ] Spawns
+  - [ ] Remove smokes
+  - [ ] Move to spec
+  - [ ] Noclip
 
 ## Compilation
 
@@ -49,23 +37,8 @@ CS2Fixes is a collection of experimental fixes and features aimed but not limite
 - [AMBuild](https://wiki.alliedmods.net/Ambuild)
 
 ### Instructions
+TODO
 
-Follow the instructions below to compile CS2Fixes.
-
-```bash
-git clone https://github.com/Source2ZE/CS2Fixes/ && cd CS2Fixes
-git submodule update --init --recursive
-
-export MMSOURCE112=/path/to/metamod/
-export HL2SDKCS2=/path/to/sdk/submodule
-
-mkdir build && cd build
-CC=gcc CXX=g++ python3 ../configure.py -s cs2
-ambuild
-```
-
-Copy the contents of package/ to your server's csgo/ directory.
-
-## Authors
+## Authors from the [original repository](https://github.com/Source2ZE/CS2Fixes/)
 - [@xen-000](https://github.com/xen-000)
 - [@poggicek](https://github.com/poggicek)
