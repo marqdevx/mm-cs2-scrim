@@ -72,14 +72,14 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <TargetName>cs2fixes</TargetName>
+    <TargetName>cs2scrim</TargetName>
     <LibraryPath>sdk\lib\public\win64;vendor/funchook/lib;$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64)</LibraryPath>
-    <OutDir>$(SolutionDir)/package/addons/cs2fixes/bin/win64/</OutDir>
+    <OutDir>$(SolutionDir)/package/addons/cs2scrim/bin/win64/</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <TargetName>cs2fixes</TargetName>
+    <TargetName>cs2scrim</TargetName>
     <LibraryPath>sdk\lib\public\win64;vendor/funchook/lib;$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64)</LibraryPath>
-    <OutDir>$(SolutionDir)/package/addons/cs2fixes/bin/win64/</OutDir>
+    <OutDir>$(SolutionDir)/package/addons/cs2scrim/bin/win64/</OutDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>

@@ -32,7 +32,7 @@
 #include "interface.h"
 #include "tier0/dbg.h"
 #include "interfaces/cs2_interfaces.h"
-#include "plat.h"
+//#include "plat.h"
 #include "entitysystem.h"
 #include "engine/igameeventsystem.h"
 #include "ctimer.h"
@@ -56,7 +56,7 @@ void Message(const char *msg, ...)
 	char buf[1024] = {};
 	V_vsnprintf(buf, sizeof(buf) - 1, msg, args);
 
-	ConColorMsg(Color(255, 0, 255, 255), "[CS2Fixes] %s", buf);
+	ConColorMsg(Color(255, 0, 255, 255), "[CS2Scrim] %s", buf);
 
 	va_end(args);
 }
@@ -70,7 +70,7 @@ void Panic(const char *msg, ...)
 	V_vsnprintf(buf, sizeof(buf) - 1, msg, args);
 
 	if (CommandLine()->HasParm("-dedicated"))
-		Warning("[CS2Fixes] %s", buf);
+		Warning("[CS2Scrim] %s", buf);
 #ifdef _WIN32
 	else
 		MessageBoxA(nullptr, buf, "Warning", 0);
@@ -96,7 +96,7 @@ SH_DECL_HOOK3_void(INetworkServerService, StartupServer, SH_NOATTRIB, 0, const G
 // , bool, IRecipientFilter*, INetworkSerializable*, void* data, unsigned long nSize
 SH_DECL_HOOK2_void( IServerGameClients, ClientCommand, SH_NOATTRIB, 0, CPlayerSlot, const CCommand & );
 
-CS2Fixes g_CS2Fixes;
+cs2scrim g_CS2Fixes;
 
 // Should only be called within the active game loop (i e map should be loaded and active)
 // otherwise that'll be nullptr!
@@ -132,8 +132,8 @@ CGlobalVars* gpGlobals = nullptr;
 CPlayerManager* g_playerManager;
 IVEngineServer2* g_pEngineServer2;
 
-PLUGIN_EXPOSE(CS2Fixes, g_CS2Fixes);
-bool CS2Fixes::Load(PluginId id, ISmmAPI *ismm, char *error, size_t maxlen, bool late)
+PLUGIN_EXPOSE(cs2scrim, g_CS2Fixes);
+bool cs2scrim::Load(PluginId id, ISmmAPI *ismm, char *error, size_t maxlen, bool late)
 {
 	PLUGIN_SAVEVARS();
 
@@ -151,16 +151,16 @@ bool CS2Fixes::Load(PluginId id, ISmmAPI *ismm, char *error, size_t maxlen, bool
 
 	META_CONPRINTF( "Starting plugin.\n" );
 
-	SH_ADD_HOOK_MEMFUNC(IServerGameDLL, GameFrame, g_pSource2Server, this, &CS2Fixes::Hook_GameFrame, true);
-	SH_ADD_HOOK_MEMFUNC(IServerGameClients, ClientActive, g_pSource2GameClients, this, &CS2Fixes::Hook_ClientActive, true);
-	SH_ADD_HOOK_MEMFUNC(IServerGameClients, ClientDisconnect, g_pSource2GameClients, this, &CS2Fixes::Hook_ClientDisconnect, true);
-	SH_ADD_HOOK_MEMFUNC(IServerGameClients, ClientPutInServer, g_pSource2GameClients, this, &CS2Fixes::Hook_ClientPutInServer, true);
-	SH_ADD_HOOK_MEMFUNC(IServerGameClients, ClientSettingsChanged, g_pSource2GameClients, this, &CS2Fixes::Hook_ClientSettingsChanged, false);
-	SH_ADD_HOOK_MEMFUNC(IServerGameClients, OnClientConnected, g_pSource2GameClients, this, &CS2Fixes::Hook_OnClientConnected, false);
-	SH_ADD_HOOK_MEMFUNC(IServerGameClients, ClientConnect, g_pSource2GameClients, this, &CS2Fixes::Hook_ClientConnect, false );
-	SH_ADD_HOOK_MEMFUNC(IServerGameClients, ClientCommand, g_pSource2GameClients, this, &CS2Fixes::Hook_ClientCommand, false);
-	SH_ADD_HOOK_MEMFUNC(IGameEventSystem, PostEventAbstract, g_gameEventSystem, this, &CS2Fixes::Hook_PostEvent, false);
-	SH_ADD_HOOK_MEMFUNC(INetworkServerService, StartupServer, g_pNetworkServerService, this, &CS2Fixes::Hook_StartupServer, true);
+	SH_ADD_HOOK_MEMFUNC(IServerGameDLL, GameFrame, g_pSource2Server, this, &cs2scrim::Hook_GameFrame, true);
+	SH_ADD_HOOK_MEMFUNC(IServerGameClients, ClientActive, g_pSource2GameClients, this, &cs2scrim::Hook_ClientActive, true);
+	SH_ADD_HOOK_MEMFUNC(IServerGameClients, ClientDisconnect, g_pSource2GameClients, this, &cs2scrim::Hook_ClientDisconnect, true);
+	SH_ADD_HOOK_MEMFUNC(IServerGameClients, ClientPutInServer, g_pSource2GameClients, this, &cs2scrim::Hook_ClientPutInServer, true);
+	SH_ADD_HOOK_MEMFUNC(IServerGameClients, ClientSettingsChanged, g_pSource2GameClients, this, &cs2scrim::Hook_ClientSettingsChanged, false);
+	SH_ADD_HOOK_MEMFUNC(IServerGameClients, OnClientConnected, g_pSource2GameClients, this, &cs2scrim::Hook_OnClientConnected, false);
+	SH_ADD_HOOK_MEMFUNC(IServerGameClients, ClientConnect, g_pSource2GameClients, this, &cs2scrim::Hook_ClientConnect, false );
+	SH_ADD_HOOK_MEMFUNC(IServerGameClients, ClientCommand, g_pSource2GameClients, this, &cs2scrim::Hook_ClientCommand, false);
+	SH_ADD_HOOK_MEMFUNC(IGameEventSystem, PostEventAbstract, g_gameEventSystem, this, &cs2scrim::Hook_PostEvent, false);
+	SH_ADD_HOOK_MEMFUNC(INetworkServerService, StartupServer, g_pNetworkServerService, this, &cs2scrim::Hook_StartupServer, true);
 
 	META_CONPRINTF( "All hooks started!\n" );
 	
@@ -174,7 +174,7 @@ bool CS2Fixes::Load(PluginId id, ISmmAPI *ismm, char *error, size_t maxlen, bool
 
 	ConVar_Register(FCVAR_RELEASE | FCVAR_CLIENT_CAN_EXECUTE | FCVAR_GAMEDLL);
 
-	InitPatches();
+	//InitPatches();
 	InitDetours();
 
 	g_playerManager = new CPlayerManager();
@@ -194,25 +194,25 @@ bool CS2Fixes::Load(PluginId id, ISmmAPI *ismm, char *error, size_t maxlen, bool
 	return true;
 }
 
-bool CS2Fixes::Unload(char *error, size_t maxlen)
+bool cs2scrim::Unload(char *error, size_t maxlen)
 {
-	SH_REMOVE_HOOK_MEMFUNC(IServerGameDLL, GameFrame, g_pSource2Server, this, &CS2Fixes::Hook_GameFrame, true);
-	SH_REMOVE_HOOK_MEMFUNC(IServerGameClients, ClientActive, g_pSource2GameClients, this, &CS2Fixes::Hook_ClientActive, true);
-	SH_REMOVE_HOOK_MEMFUNC(IServerGameClients, ClientDisconnect, g_pSource2GameClients, this, &CS2Fixes::Hook_ClientDisconnect, true);
-	SH_REMOVE_HOOK_MEMFUNC(IServerGameClients, ClientPutInServer, g_pSource2GameClients, this, &CS2Fixes::Hook_ClientPutInServer, true);
-	SH_REMOVE_HOOK_MEMFUNC(IServerGameClients, ClientSettingsChanged, g_pSource2GameClients, this, &CS2Fixes::Hook_ClientSettingsChanged, false);
-	SH_REMOVE_HOOK_MEMFUNC(IServerGameClients, OnClientConnected, g_pSource2GameClients, this, &CS2Fixes::Hook_OnClientConnected, false);
-	SH_REMOVE_HOOK_MEMFUNC(IServerGameClients, ClientConnect, g_pSource2GameClients, this, &CS2Fixes::Hook_ClientConnect, false);
-	SH_REMOVE_HOOK_MEMFUNC(IServerGameClients, ClientCommand, g_pSource2GameClients, this, &CS2Fixes::Hook_ClientCommand, false);
-	SH_REMOVE_HOOK_MEMFUNC(IGameEventSystem, PostEventAbstract, g_gameEventSystem, this, &CS2Fixes::Hook_PostEvent, false);
-	SH_REMOVE_HOOK_MEMFUNC(INetworkServerService, StartupServer, g_pNetworkServerService, this, &CS2Fixes::Hook_StartupServer, true);
+	SH_REMOVE_HOOK_MEMFUNC(IServerGameDLL, GameFrame, g_pSource2Server, this, &cs2scrim::Hook_GameFrame, true);
+	SH_REMOVE_HOOK_MEMFUNC(IServerGameClients, ClientActive, g_pSource2GameClients, this, &cs2scrim::Hook_ClientActive, true);
+	SH_REMOVE_HOOK_MEMFUNC(IServerGameClients, ClientDisconnect, g_pSource2GameClients, this, &cs2scrim::Hook_ClientDisconnect, true);
+	SH_REMOVE_HOOK_MEMFUNC(IServerGameClients, ClientPutInServer, g_pSource2GameClients, this, &cs2scrim::Hook_ClientPutInServer, true);
+	SH_REMOVE_HOOK_MEMFUNC(IServerGameClients, ClientSettingsChanged, g_pSource2GameClients, this, &cs2scrim::Hook_ClientSettingsChanged, false);
+	SH_REMOVE_HOOK_MEMFUNC(IServerGameClients, OnClientConnected, g_pSource2GameClients, this, &cs2scrim::Hook_OnClientConnected, false);
+	SH_REMOVE_HOOK_MEMFUNC(IServerGameClients, ClientConnect, g_pSource2GameClients, this, &cs2scrim::Hook_ClientConnect, false);
+	SH_REMOVE_HOOK_MEMFUNC(IServerGameClients, ClientCommand, g_pSource2GameClients, this, &cs2scrim::Hook_ClientCommand, false);
+	SH_REMOVE_HOOK_MEMFUNC(IGameEventSystem, PostEventAbstract, g_gameEventSystem, this, &cs2scrim::Hook_PostEvent, false);
+	SH_REMOVE_HOOK_MEMFUNC(INetworkServerService, StartupServer, g_pNetworkServerService, this, &cs2scrim::Hook_StartupServer, true);
 
 	ConVar_Unregister();
 
 	g_CommandList.Purge();
 
 	FlushAllDetours();
-	UndoPatches();
+	//UndoPatches();
 	RemoveTimers();
 
 	delete g_playerManager;
@@ -221,7 +221,7 @@ bool CS2Fixes::Unload(char *error, size_t maxlen)
 	return true;
 }
 
-void CS2Fixes::Hook_StartupServer(const GameSessionConfiguration_t& config, ISource2WorldSession*, const char*)
+void cs2scrim::Hook_StartupServer(const GameSessionConfiguration_t& config, ISource2WorldSession*, const char*)
 {
 	Message("startup server\n");
 
@@ -240,9 +240,10 @@ void CS2Fixes::Hook_StartupServer(const GameSessionConfiguration_t& config, ISou
 }
 
 
-void CS2Fixes::Hook_PostEvent(CSplitScreenSlot nSlot, bool bLocalOnly, int nClientCount, const uint64* clients,
+void cs2scrim::Hook_PostEvent(CSplitScreenSlot nSlot, bool bLocalOnly, int nClientCount, const uint64* clients,
 	INetworkSerializable* pEvent, const void* pData, unsigned long nSize, NetChannelBufType_t bufType)
 {
+	/*
 	NetMessageInfo_t* info = pEvent->GetNetMessageInfo();
 
 	//CMsgTEFireBullets
@@ -263,32 +264,32 @@ void CS2Fixes::Hook_PostEvent(CSplitScreenSlot nSlot, bool bLocalOnly, int nClie
 				nClientCount--;
 			}
 		}
-	}
+	}*/
 }
 
-void CS2Fixes::AllPluginsLoaded()
+void cs2scrim::AllPluginsLoaded()
 {
 	/* This is where we'd do stuff that relies on the mod or other plugins 
 	 * being initialized (for example, cvars added and events registered).
 	 */
 }
 
-void CS2Fixes::Hook_ClientActive( CPlayerSlot slot, bool bLoadGame, const char *pszName, uint64 xuid )
+void cs2scrim::Hook_ClientActive( CPlayerSlot slot, bool bLoadGame, const char *pszName, uint64 xuid )
 {
 	META_CONPRINTF( "Hook_ClientActive(%d, %d, \"%s\", %lli)\n", slot, bLoadGame, pszName, xuid );
 }
 
-void CS2Fixes::Hook_ClientCommand( CPlayerSlot slot, const CCommand &args )
+void cs2scrim::Hook_ClientCommand( CPlayerSlot slot, const CCommand &args )
 {
 	META_CONPRINTF( "Hook_ClientCommand(%d, \"%s\")\n", slot, args.GetCommandString() );
 }
 
-void CS2Fixes::Hook_ClientSettingsChanged( CPlayerSlot slot )
+void cs2scrim::Hook_ClientSettingsChanged( CPlayerSlot slot )
 {
 	META_CONPRINTF( "Hook_ClientSettingsChanged(%d)\n", slot );
 }
 
-void CS2Fixes::Hook_OnClientConnected( CPlayerSlot slot, const char *pszName, uint64 xuid, const char *pszNetworkID, const char *pszAddress, bool bFakePlayer )
+void cs2scrim::Hook_OnClientConnected( CPlayerSlot slot, const char *pszName, uint64 xuid, const char *pszNetworkID, const char *pszAddress, bool bFakePlayer )
 {
 	if(bFakePlayer)
 		g_playerManager->OnBotConnected(slot);
@@ -296,7 +297,7 @@ void CS2Fixes::Hook_OnClientConnected( CPlayerSlot slot, const char *pszName, ui
 	META_CONPRINTF( "Hook_OnClientConnected(%d, \"%s\", %lli, \"%s\", \"%s\", %d)\n", slot, pszName, xuid, pszNetworkID, pszAddress, bFakePlayer );
 }
 
-bool CS2Fixes::Hook_ClientConnect( CPlayerSlot slot, const char *pszName, uint64 xuid, const char *pszNetworkID, bool unk1, CBufferString *pRejectReason )
+bool cs2scrim::Hook_ClientConnect( CPlayerSlot slot, const char *pszName, uint64 xuid, const char *pszNetworkID, bool unk1, CBufferString *pRejectReason )
 {
 	g_playerManager->OnClientConnected(slot);
 	META_CONPRINTF( "Hook_ClientConnect(%d, \"%s\", %lli, \"%s\", %d, \"%s\")\n", slot, pszName, xuid, pszNetworkID, unk1, pRejectReason->ToGrowable()->Get() );
@@ -304,18 +305,18 @@ bool CS2Fixes::Hook_ClientConnect( CPlayerSlot slot, const char *pszName, uint64
 	RETURN_META_VALUE(MRES_IGNORED, true);
 }
 
-void CS2Fixes::Hook_ClientPutInServer( CPlayerSlot slot, char const *pszName, int type, uint64 xuid )
+void cs2scrim::Hook_ClientPutInServer( CPlayerSlot slot, char const *pszName, int type, uint64 xuid )
 {
 	META_CONPRINTF( "Hook_ClientPutInServer(%d, \"%s\", %d, %d, %lli)\n", slot, pszName, type, xuid );
 }
 
-void CS2Fixes::Hook_ClientDisconnect( CPlayerSlot slot, int reason, const char *pszName, uint64 xuid, const char *pszNetworkID )
+void cs2scrim::Hook_ClientDisconnect( CPlayerSlot slot, int reason, const char *pszName, uint64 xuid, const char *pszNetworkID )
 {
 	g_playerManager->OnClientDisconnect(slot);
 	META_CONPRINTF( "Hook_ClientDisconnect(%d, %d, \"%s\", %lli, \"%s\")\n", slot, reason, pszName, xuid, pszNetworkID );
 }
 
-void CS2Fixes::Hook_GameFrame( bool simulating, bool bFirstTick, bool bLastTick )
+void cs2scrim::Hook_GameFrame( bool simulating, bool bFirstTick, bool bLastTick )
 {
 	/**
 	 * simulating:
@@ -367,7 +368,7 @@ void CS2Fixes::Hook_GameFrame( bool simulating, bool bFirstTick, bool bLastTick 
 }
 
 // Potentially might not work
-void CS2Fixes::OnLevelInit( char const *pMapName,
+void cs2scrim::OnLevelInit( char const *pMapName,
 									 char const *pMapEntities,
 									 char const *pOldLevel,
 									 char const *pLandmarkName,
@@ -378,57 +379,57 @@ void CS2Fixes::OnLevelInit( char const *pMapName,
 }
 
 // Potentially might not work
-void CS2Fixes::OnLevelShutdown()
+void cs2scrim::OnLevelShutdown()
 {
 	META_CONPRINTF("OnLevelShutdown()\n");
 }
 
-bool CS2Fixes::Pause(char *error, size_t maxlen)
+bool cs2scrim::Pause(char *error, size_t maxlen)
 {
 	return true;
 }
 
-bool CS2Fixes::Unpause(char *error, size_t maxlen)
+bool cs2scrim::Unpause(char *error, size_t maxlen)
 {
 	return true;
 }
 
-const char *CS2Fixes::GetLicense()
+const char *cs2scrim::GetLicense()
 {
 	return "MIT License";
 }
 
-const char *CS2Fixes::GetVersion()
+const char *cs2scrim::GetVersion()
 {
 	return "1.0.0.0";
 }
 
-const char *CS2Fixes::GetDate()
+const char *cs2scrim::GetDate()
 {
 	return __DATE__;
 }
 
-const char *CS2Fixes::GetLogTag()
+const char *cs2scrim::GetLogTag()
 {
-	return "CS2Fixes";
+	return "cs2scrim";
 }
 
-const char *CS2Fixes::GetAuthor()
+const char *cs2scrim::GetAuthor()
 {
-	return "xen & poggu";
+	return "marqdevx tweak over xen & poggu";
 }
 
-const char *CS2Fixes::GetDescription()
+const char *cs2scrim::GetDescription()
 {
 	return "A bunch of experiments thrown together into one big mess of a plugin.";
 }
 
-const char *CS2Fixes::GetName()
+const char *cs2scrim::GetName()
 {
-	return "CS2Fixes";
+	return "cs2scrim";
 }
 
-const char *CS2Fixes::GetURL()
+const char *cs2scrim::GetURL()
 {
-	return "https://github.com/Source2ZE/CS2Fixes";
+	return "https://github.com/marqdevx/mm-cs2-scrim";
 }
