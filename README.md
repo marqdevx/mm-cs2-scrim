@@ -22,7 +22,7 @@ This plugin adds the minimum requirements for competitive teams that need a more
   - [X] Medic (round backup)
   - [ ] Coach
   - [X] gotv .record
-    - [ ] include date and time
+    - [X] include date and time
     - [ ] include map name
 - Practice
   - [X] Map
