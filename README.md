@@ -18,11 +18,10 @@ This plugin adds the minimum requirements for competitive teams that need a more
 * Scrim commands  
   `.pause`: pauses the match  
   `.unpause`: request the unpause  
-  `.record`: start the demo recording  
-  `.stoprecord`: finish the recording and save it under `gotv/<date>.dem`  
-  `.restore <round>`: load the desired round's backup  
-
   * Admin only  
+    `.record`: start the demo recording  
+    `.stoprecord`: finish the recording and save it under `gotv/<date>.dem`  
+    `.restore <round>`: load the desired round's backup  
     `.forceunpause`: force the unpause  
 
 ## Roadmap
