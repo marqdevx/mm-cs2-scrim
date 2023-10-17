@@ -10,13 +10,20 @@ This plugin adds the minimum requirements for competitive teams that need a more
 
 ## Available Commands
 
-`.pracc`: launch the practice config  
-`.scrim`: start the competitive match  
-`.pause`: pauses the match  
-`.unpause`: request the unpause  
-`.record`: start the demo recording  
-`.stoprecord`: finish the recording and save it under `gotv/<date>.dem`  
-`.restore <round>`: load the desired round's backup  
+* Config and server management (Admin only)  
+  `.pracc`: launch the practice config  
+  `.scrim`: start the competitive match  
+  `.map <map>`: change the map (example: `.map ancient`)  
+
+* Scrim commands  
+  `.pause`: pauses the match  
+  `.unpause`: request the unpause  
+  `.record`: start the demo recording  
+  `.stoprecord`: finish the recording and save it under `gotv/<date>.dem`  
+  `.restore <round>`: load the desired round's backup  
+
+  * Admin only  
+    `.forceunpause`: force the unpause  
 
 ## Roadmap
 - Scrim
