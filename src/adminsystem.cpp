@@ -176,11 +176,9 @@ CON_COMMAND_CHAT(restore, "Restore round")
         
 	int nRounds = atoi(args[1]);
 	
-	V_snprintf(aux, MAX_PATH, "%s", backupFile);
+	V_snprintf(buf, MAX_PATH, "%s", backupFile);
 
-	if ( nRounds < 10) V_snprintf(buf, MAX_PATH, "%s%i",aux, 0);
-
-	V_snprintf(aux, MAX_PATH, "%s%i.txt", buf, nRounds);
+	V_snprintf(aux, MAX_PATH, "%s%02i.txt", buf, nRounds);
 
 	V_snprintf(buf, MAX_PATH, "mp_backup_restore_load_file %s", aux);
 
