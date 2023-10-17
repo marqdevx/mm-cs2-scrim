@@ -41,104 +41,6 @@ extern CEntitySystem *g_pEntitySystem;
 DECLARE_DETOUR(Host_Say, Detour_Host_Say, &modules::server);
 DECLARE_DETOUR(UTIL_SayTextFilter, Detour_UTIL_SayTextFilter, &modules::server);
 DECLARE_DETOUR(UTIL_SayText2Filter, Detour_UTIL_SayText2Filter, &modules::server);
-DECLARE_DETOUR(IsHearingClient, Detour_IsHearingClient, &modules::engine);
-DECLARE_DETOUR(CSoundEmitterSystem_EmitSound, Detour_CSoundEmitterSystem_EmitSound, &modules::server);
-DECLARE_DETOUR(CCSWeaponBase_Spawn, Detour_CCSWeaponBase_Spawn, &modules::server);
-DECLARE_DETOUR(TriggerPush_Touch, Detour_TriggerPush_Touch, &modules::server);
-
-void FASTCALL Detour_TriggerPush_Touch(CTriggerPush* pPush, Z_CBaseEntity* pOther)
-{
-	MoveType_t movetype = pOther->m_MoveType();
-
-	// VPhysics handling doesn't need any changes
-	if (movetype == MOVETYPE_VPHYSICS)
-	{
-		TriggerPush_Touch(pPush, pOther);
-		return;
-	}
-
-	Z_CBaseEntity* pPushEnt = (Z_CBaseEntity*)pPush;
-
-	// SF_TRIG_PUSH_ONCE is handled fine already
-	if (pPushEnt->m_spawnflags() & SF_TRIG_PUSH_ONCE)
-	{
-		TriggerPush_Touch(pPush, pOther);
-		return;
-	}
-
-	if (movetype == MOVETYPE_NONE || movetype == MOVETYPE_PUSH || movetype == MOVETYPE_NOCLIP)
-		return;
-
-	CCollisionProperty* collisionProp = pOther->m_pCollision();
-	if (!IsSolid(collisionProp->m_nSolidType(), collisionProp->m_usSolidFlags()))
-		return;
-
-	if (!pPush->PassesTriggerFilters(pOther))
-		return;
-
-	if (pOther->m_CBodyComponent()->m_pSceneNode()->m_pParent())
-		return;
-
-	Vector vecAbsDir;
-
-	matrix3x4_t mat = pPushEnt->m_CBodyComponent()->m_pSceneNode()->EntityToWorldTransform();
-	
-	Vector pushDir = pPush->m_vecPushDirEntitySpace();
-
-	// i had issues with vectorrotate on linux so i did it here
-	vecAbsDir.x = pushDir.x * mat[0][0] + pushDir.y * mat[0][1] + pushDir.z * mat[0][2];
-	vecAbsDir.y = pushDir.x * mat[1][0] + pushDir.y * mat[1][1] + pushDir.z * mat[1][2];
-	vecAbsDir.z = pushDir.x * mat[2][0] + pushDir.y * mat[2][1] + pushDir.z * mat[2][2];
-
-	Vector vecPush = vecAbsDir * pPush->m_flPushSpeed();
-
-	uint32 flags = pOther->m_fFlags();
-
-	if (flags & (FL_BASEVELOCITY))
-	{
-		vecPush = vecPush + pOther->m_vecBaseVelocity();
-	}
-
-	if (vecPush.z > 0 && (flags & FL_ONGROUND))
-	{
-		addresses::SetGroundEntity(pOther, nullptr);
-		Vector origin = pOther->GetAbsOrigin();
-		origin.z += 1.0f;
-
-		pOther->Teleport(&origin, nullptr, nullptr);
-	}
-
-	pOther->m_vecBaseVelocity(vecPush);
-
-	flags |= (FL_BASEVELOCITY);
-	pOther->m_fFlags(flags);
-}
-
-void FASTCALL Detour_CCSWeaponBase_Spawn(CBaseEntity *pThis, void *a2)
-{
-	const char *pszClassName = pThis->m_pEntity->m_designerName.String();
-
-	Message("Weapon spawn: %s\n", pszClassName);
-
-	CCSWeaponBase_Spawn(pThis, a2);
-
-	FixWeapon((CCSWeaponBase *)pThis);
-}
-
-void FASTCALL Detour_CSoundEmitterSystem_EmitSound(ISoundEmitterSystemBase *pSoundEmitterSystem, CEntityIndex *a2, IRecipientFilter &filter, uint32 a4, void *a5)
-{
-	//ConMsg("Detour_CSoundEmitterSystem_EmitSound\n");
-	CSoundEmitterSystem_EmitSound(pSoundEmitterSystem, a2, filter, a4, a5);
-}
-
-bool FASTCALL Detour_IsHearingClient(void* serverClient, int index)
-{
-	ZEPlayer* player = g_playerManager->GetPlayer(index);
-	if (player && player->IsMuted())
-		return false;
-
-	return IsHearingClient(serverClient, index);
-}
 
 void FASTCALL Detour_UTIL_SayTextFilter(IRecipientFilter &filter, const char *pText, CCSPlayerController *pPlayer, uint64 eMessageType)
 {
@@ -180,7 +82,7 @@ void FASTCALL Detour_Host_Say(CCSPlayerController *pController, CCommand &args, 
 	if (args.ArgC() < 2 || *args[1] != '/')
 		Host_Say(pController, args, teamonly, unk1, unk2);
 
-	if (*args[1] == '!' || *args[1] == '/')
+	if (*args[1] == '!' || *args[1] == '/' || *args[1] == '.')
 		ParseChatCommand(args[1], pController);
 }
 
@@ -246,17 +148,17 @@ void InitDetours()
 	Host_Say.CreateDetour();
 	Host_Say.EnableDetour();
 
-	IsHearingClient.CreateDetour();
+	/*IsHearingClient.CreateDetour();
 	IsHearingClient.EnableDetour();
+*/
+	/*CSoundEmitterSystem_EmitSound.CreateDetour();
+	CSoundEmitterSystem_EmitSound.EnableDetour();*/
 
-	CSoundEmitterSystem_EmitSound.CreateDetour();
-	CSoundEmitterSystem_EmitSound.EnableDetour();
+	//CCSWeaponBase_Spawn.CreateDetour();
+	//CCSWeaponBase_Spawn.EnableDetour();
 
-	CCSWeaponBase_Spawn.CreateDetour();
-	CCSWeaponBase_Spawn.EnableDetour();
-
-	TriggerPush_Touch.CreateDetour();
-	TriggerPush_Touch.EnableDetour();
+	//TriggerPush_Touch.CreateDetour();
+	//TriggerPush_Touch.EnableDetour();
 }
 
 void FlushAllDetours()

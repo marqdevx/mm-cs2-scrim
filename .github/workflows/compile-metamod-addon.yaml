@@ -1,0 +1,65 @@
+name: Compile MM addon
+on:
+  - push
+  - pull_request
+
+env:
+  HL2SDKCS2: /home/runner/work/mm-cs2-scrim/mm-cs2-scrim/sdk
+  MMSOURCE_DEV: /home/runner/work/mm-cs2-scrim/mm-cs2-scrim/metamod-source
+  CC: clang
+  CXX: clang++
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+       
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - name: Clone metamod
+        uses: GuillaumeFalourd/clone-github-repo-action@v2.2
+        with:
+          depth: 1
+          branch: 'master'
+          owner: 'alliedmodders'
+          repository: 'metamod-source'
+
+      - name: Clone ambuild
+        uses: GuillaumeFalourd/clone-github-repo-action@v2.2
+        with:
+          depth: 1
+          branch: 'master'
+          owner: 'alliedmodders'
+          repository: 'ambuild'
+
+      - name: Info
+        run: |
+          echo $(pwd)
+          echo $HL2SDKCS2
+          echo $MMSOURCE_DEV
+          ls -la
+      - name: Update submodules
+        run: |
+          cd /home/runner/work/mm-cs2-scrim/mm-cs2-scrim/metamod-source
+          git submodule update --recursive
+          
+      - name: Compile
+        run: |
+          git config --global user.name github-actions
+          git config --global user.email github-actions@github.com
+          
+          echo ---
+          sudo apt-get update
+          sudo apt-get install python3-setuptools -y 
+          sudo apt-get install clang -y
+          sudo apt-get install python3 -y
+          sudo apt-get install gcc -y
+          echo ---
+          cd /home/runner/work/mm-cs2-scrim/mm-cs2-scrim/ambuild && sudo python3 ./setup.py install
+          ls -la
+          cd /home/runner/work/mm-cs2-scrim/mm-cs2-scrim
+          ls -la
+          mkdir build && cd build && python3 ../configure.py --enable-optimize --symbol-files --sdks cs2
+          ambuild
