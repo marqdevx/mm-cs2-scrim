@@ -48,7 +48,7 @@ This plugin adds the minimum requirements for competitive teams that need a more
 - [AMBuild](https://wiki.alliedmods.net/Ambuild)
 
 ### Instructions
-[![Set up video](https://img.youtube.com/vi/thk78MDsQnc/0.jpg)]([https://www.youtube.com/watch?v=YOUTUBE_VIDEO_ID_HERE](https://www.youtube.com/watch?v=thk78MDsQnc))
+[![Set up video](https://img.youtube.com/vi/thk78MDsQnc/0.jpg)]([https://www.youtube.com/watch?v=YOUTUBE_VIDEO_ID_HERE](https://www.youtube.com/watch?v=thk78MDsQnc))  
 Set up video: https://www.youtube.com/watch?v=thk78MDsQnc
 
 ## Authors from the [original repository](https://github.com/Source2ZE/CS2Fixes/)
