@@ -1,3 +1,5 @@
+![Build pass](https://github.com/marqdevx/mm-cs2-scrim/actions/workflows/compile-metamod-addon.yaml/badge.svg)
+
 ## This repository is just a tweak of https://github.com/Source2ZE/CS2Fixes/
 Removing "unnecessary" features from the original addon, to have the minimum to just run the commands.
 

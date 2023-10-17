@@ -1,4 +1,4 @@
-name: Compile Metamod Addon
+name: Compile MM addon
 on:
   - push
   - pull_request
