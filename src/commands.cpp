@@ -120,7 +120,7 @@ CON_COMMAND_CHAT(unpause, "Request unpause")
 	}
 
 	if(ct_ready && !t_ready){
-		ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX"T ready, type .unpause");
+		ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX"CT ready, type .unpause");
 		return;
 	}else if(!ct_ready && t_ready){
 		ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX"T ready, type .unpause");
@@ -128,6 +128,7 @@ CON_COMMAND_CHAT(unpause, "Request unpause")
 	}
 
 	match_paused = false;
+	ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX"Match \2unpaused");
 	g_pEngineServer2->ServerCommand("mp_unpause_match");
 }
 
