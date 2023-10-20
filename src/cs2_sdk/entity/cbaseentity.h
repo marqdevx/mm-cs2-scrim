@@ -22,10 +22,12 @@
 #include "../schema.h"
 #include "ccollisionproperty.h"
 #include "mathlib/vector.h"
-#include "baseentity.h"
 #include "ehandle.h"
+#include "../../gameconfig.h"
 
 CGlobalVars* GetGameGlobals();
+
+extern CGameConfig *g_GameConfig;
 
 class CNetworkTransmitComponent
 {
@@ -129,15 +131,34 @@ public:
 	SCHEMA_FIELD(MoveType_t, m_MoveType)
 	SCHEMA_FIELD(uint32, m_spawnflags)
 	SCHEMA_FIELD(uint32, m_fFlags)
+	SCHEMA_FIELD(LifeState_t, m_lifeState)
 
 	int entindex() { return m_pEntity->m_EHandle.GetEntryIndex(); }
 
 	Vector GetAbsOrigin() { return m_CBodyComponent->m_pSceneNode->m_vecAbsOrigin; }
 	void SetAbsOrigin(Vector vecOrigin) { m_CBodyComponent->m_pSceneNode->m_vecAbsOrigin = vecOrigin; }
 
-	void Teleport(Vector *position, QAngle *angles, Vector *velocity) { CALL_VIRTUAL(void, 148, this, position, angles, velocity); }
+	void Teleport(Vector *position, QAngle *angles, Vector *velocity) { static int offset = g_GameConfig->GetOffset("Teleport"); CALL_VIRTUAL(void, offset, this, position, angles, velocity); }
 
-	void CollisionRulesChanged() { CALL_VIRTUAL(void, offsets::CollisionRulesChanged, this); }
+	void CollisionRulesChanged()
+	{
+		static int offset = g_GameConfig->GetOffset("CollisionRulesChanged");
+		CALL_VIRTUAL(void, offset, this);
+	}
+
+	bool IsPawn()
+	{
+		static int offset = g_GameConfig->GetOffset("IsEntityPawn");
+		CALL_VIRTUAL(bool, offset, this);
+	}
+
+	bool IsController()
+	{
+		static int offset = g_GameConfig->GetOffset("IsEntityController");
+		CALL_VIRTUAL(bool, offset, this);
+	}
+
+	bool IsAlive() { return m_lifeState == LifeState_t::LIFE_ALIVE; }
 
 	CHandle<CBaseEntity> GetHandle() { return m_pEntity->m_EHandle; }
 
