@@ -35,6 +35,8 @@ extern CEntitySystem *g_pEntitySystem;
 
 CAdminSystem* g_pAdminSystem;
 
+bool practiceMode = false;
+
 CUtlMap<uint32, FnChatCommandCallback_t> g_CommandList(0, 0, DefLessFunc(uint32));
 
 CON_COMMAND_F(c_reload_admins, "Reload admin config", FCVAR_SPONLY | FCVAR_LINKED_CONCOMMAND)
@@ -84,8 +86,9 @@ CON_COMMAND_CHAT(scrim, "Scrim mode")
 		return;
 	}
 
-	
 
+	practiceMode = false;
+	
 	char buf[256];
 	//V_snprintf(buf, sizeof(buf), "exec %s", args[1]);
 
@@ -110,6 +113,8 @@ CON_COMMAND_CHAT(pracc, "Practice mode")
 		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "You don't have access to this command.");
 		return;
 	}
+
+	practiceMode = true;
 
 	char buf[256];
 	//V_snprintf(buf, sizeof(buf), "exec %s", args[1]);
