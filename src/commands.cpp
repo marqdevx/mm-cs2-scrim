@@ -132,6 +132,47 @@ CON_COMMAND_CHAT(unpause, "Request unpause")
 	g_pEngineServer2->ServerCommand("mp_unpause_match");
 }
 
+
+CON_COMMAND_CHAT(spawn, "teleport to desired spawn")
+{
+	if (!player)
+	{
+		ClientPrint(player, HUD_PRINTCONSOLE, CHAT_PREFIX "You cannot use this command from the server console.");
+		return;
+	}
+
+	//Count spawnpoints (info_player_counterterrorist & info_player_terrorist)
+	SpawnPoint* spawn = nullptr;
+	CUtlVector<SpawnPoint*> spawns;
+	while (nullptr != (spawn = (SpawnPoint*)UTIL_FindEntityByClassname(spawn, "info_player_")))
+	{
+		if (spawn->m_bEnabled())
+			spawns.AddToTail(spawn);
+	}
+
+	//Pick and get position of random spawnpoint
+	int spawnIndex = args[1] % spawns.Count()+1;
+	Vector spawnpos = spawns[spawnIndex]->GetAbsOrigin();
+
+	//Here's where the mess starts
+	CBasePlayerPawn* pPawn = player->GetPawn();
+
+	if (!pPawn)
+		return;
+
+	if (!pPawn->IsAlive())
+	{
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX"You cannot teleport when dead!");
+		return;
+	}
+
+	if (!pPawn)
+		return;
+
+	pPawn->SetAbsOrigin(spawnpos);
+	ClientPrint(pPawn->GetController(), HUD_PRINTTALK, CHAT_PREFIX "You have been teleported to spawn.%s", spawnIndex);
+}
+
 /*
 
 CON_COMMAND_CHAT(getorigin, "get your origin")
