@@ -201,14 +201,14 @@ bool CS2Fixes::Load(PluginId id, ISmmAPI *ismm, char *error, size_t maxlen, bool
 
 	bool requiredInitLoaded = true;
 
-	if (!InitPatches(g_GameConfig))
-		requiredInitLoaded = false;
+	//if (!InitPatches(g_GameConfig))
+		//requiredInitLoaded = false;
 
 	if (!InitDetours(g_GameConfig))
 		requiredInitLoaded = false;
 
-	if (!requiredInitLoaded)
-		return false;
+	//if (!requiredInitLoaded)
+	//	return false;
 
 	g_playerManager = new CPlayerManager();
 	g_pAdminSystem = new CAdminSystem();
@@ -259,7 +259,7 @@ bool CS2Fixes::Unload(char *error, size_t maxlen)
 	g_CommandList.Purge();
 
 	FlushAllDetours();
-	UndoPatches();
+	//UndoPatches();
 	RemoveTimers();
 	UnregisterEventListeners();
 
