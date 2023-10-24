@@ -65,21 +65,45 @@ CON_COMMAND_F(c_force_ct, "toggle forcing CTs on every round", FCVAR_SPONLY | FC
 	Message("Forcing CTs on every round is now %s.\n", g_bForceCT ? "ON" : "OFF");
 }
 
+extern CUtlVector <CCSPlayerController*> coaches;
 GAME_EVENT_F(round_prestart)
 {
-	if (!g_bForceCT)
-		return;
+	
 
 	for (int i = 1; i <= MAXPLAYERS; i++)
 	{
-		CCSPlayerController *pController = (CCSPlayerController *)g_pEntitySystem->GetBaseEntity(CEntityIndex(i));
-
+		
 		// Only do this for Ts, ignore CTs and specs
-		if (!pController || pController->m_iTeamNum() != CS_TEAM_T)
+		/*if (!pController || pController->m_iTeamNum() != CS_TEAM_T)
 			continue;
 
-		addresses::CCSPlayerController_SwitchTeam(pController, CS_TEAM_CT);
+		addresses::CCSPlayerController_SwitchTeam(pController, CS_TEAM_CT);*/
 	}
+}
+
+GAME_EVENT_F(round_start)
+{
+	if (coaches.Count() < 1) return;
+	
+	ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX"Coaches: %i", coaches.Count());
+	FOR_EACH_VEC(coaches,i){
+		ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX"Coach %i:%s", i+1, coaches[i]->GetPlayerName());
+
+		CCSPlayerController *pTarget = (CCSPlayerController *)g_pEntitySystem->GetBaseEntity((CEntityIndex)(coaches[i]->GetPlayerSlot() + 1));
+		pTarget->m_pInGameMoneyServices->m_iAccount = 0;
+	}
+
+	// Need to wait until freeze time is over or it will be stuck with a black screen
+	new CTimer(14.0f, false, false, []()
+	{
+		FOR_EACH_VEC(coaches,i){
+			coaches[i]->GetPawn()->CommitSuicide(false, true);
+			coaches[i]->m_pActionTrackingServices->m_matchStats().m_iKills = 0;
+			coaches[i]->m_pActionTrackingServices->m_matchStats().m_iDeaths = 0;
+			coaches[i]->m_pActionTrackingServices->m_matchStats().m_iAssists = 0;
+			coaches[i]->m_pActionTrackingServices->m_matchStats().m_iDamage = 0;
+		}
+	});
 }
 
 bool g_bBlockTeamMessages = true;
@@ -99,27 +123,10 @@ GAME_EVENT_F(player_spawn)
 {
 	CBasePlayerController *pController = (CBasePlayerController*)pEvent->GetPlayerController("userid");
 
+
 	if (!pController)
 		return;
+	/**/
+	
 
-	CEntityHandle hController = pController->GetHandle();
-
-	// Gotta do this on the next frame...
-	new CTimer(0.0f, false, false, [hController]()
-	{
-		CBasePlayerController *pController = (CBasePlayerController*)Z_CBaseEntity::EntityFromHandle(hController);
-
-		if (!pController)
-			return;
-
-		CBasePlayerPawn *pPawn = pController->GetPawn();
-
-		// Just in case somehow there's health but the player is, say, an observer
-		if (!pPawn || pPawn->m_iHealth() <= 0 || !g_pSource2GameClients->IsPlayerAlive(pController->GetPlayerSlot()))
-			return;
-
-		pPawn->m_pCollision->m_collisionAttribute().m_nCollisionGroup = COLLISION_GROUP_DEBRIS;
-		pPawn->m_pCollision->m_CollisionGroup = COLLISION_GROUP_DEBRIS;
-		pPawn->CollisionRulesChanged();
-	});
 }

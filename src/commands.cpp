@@ -350,6 +350,50 @@ CON_COMMAND_CHAT(hide, "hides nearby teammates")
 		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "Now hiding teammates within %i units.", distance);
 }
 
+CUtlVector <CCSPlayerController*> coaches;
+
+CON_COMMAND_CHAT(coach, "Request slot coach")
+{
+	if (!player)
+		return;
+	
+	int iPlayer = player->GetPlayerSlot();
+	CBasePlayerController *pTarget = (CBasePlayerController *)g_pEntitySystem->GetBaseEntity((CEntityIndex)(iPlayer + 1));
+
+	if (!pTarget)
+		return;
+
+	pTarget->GetPawn()->CommitSuicide(false, true);
+	
+	player->m_pInGameMoneyServices->m_iAccount = 0;
+
+	coaches.AddToTail(player);
+	
+	ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "Your userid is %i, slot: %i, retrieved slot: %i", g_pEngineServer2->GetPlayerUserId(iPlayer).Get(), iPlayer, g_playerManager->GetSlotFromUserId(g_pEngineServer2->GetPlayerUserId(iPlayer).Get()));
+}
+
+CON_COMMAND_CHAT(uncoach, "Undo slot coach")
+{
+	if (!player)
+		return;
+	
+	int iPlayer = player->GetPlayerSlot();
+	CBasePlayerController *pTarget = (CBasePlayerController *)g_pEntitySystem->GetBaseEntity((CEntityIndex)(iPlayer + 1));
+
+	if (!pTarget)
+		return;
+
+	player->m_pInGameMoneyServices->m_iAccount = 0;
+
+	
+	FOR_EACH_VEC(coaches,i){
+		if(coaches[i]->GetPlayerSlot() == iPlayer){
+			coaches.Remove(i);	
+		}
+	}
+
+	ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "Your userid is %i, slot: %i, retrieved slot: %i", g_pEngineServer2->GetPlayerUserId(iPlayer).Get(), iPlayer, g_playerManager->GetSlotFromUserId(g_pEngineServer2->GetPlayerUserId(iPlayer).Get()));
+}
 
 #if _DEBUG
 CON_COMMAND_CHAT(message, "message someone")
