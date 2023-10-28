@@ -157,6 +157,7 @@ CON_COMMAND_CHAT(spawn, "teleport to desired spawn")
 		V_snprintf(teamName, sizeof(teamName), "info_player_counterterrorist");
 	}else{
 		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX"You cannot teleport in spectator!");
+		return;
 	}
 
 	//Count spawnpoints (info_player_counterterrorist & info_player_terrorist)
