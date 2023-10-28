@@ -144,6 +144,12 @@ CON_COMMAND_CHAT(spawn, "teleport to desired spawn")
 		return;
 	}
 
+	if (args.ArgC() < 2)
+	{
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "Usage: !spawn <spawn number>");
+		return;
+	}
+
 	char teamName[256];
 	if(player->m_iTeamNum == CS_TEAM_T){
 		V_snprintf(teamName, sizeof(teamName), "info_player_terrorist");
