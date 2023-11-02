@@ -690,7 +690,7 @@ bool CAdminSystem::LoadAdmins()
 	for (KeyValues* pKey = pKV->GetFirstSubKey(); pKey; pKey = pKey->GetNextKey())
 	{
 		const char *pszName = pKey->GetName();
-		const char *pszSteamID = pKey->GetString("steamid", nullptr);
+		const char *pszSteamID = pKey->GetString("steam", nullptr);
 		const char *pszFlags = pKey->GetString("flags", nullptr);
 
 		if (!pszSteamID)
