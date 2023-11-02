@@ -202,7 +202,7 @@ void FASTCALL Detour_Host_Say(CCSPlayerController *pController, CCommand &args, 
 		}
 	}
 
-	if (*args[1] == '!' || *args[1] == '/')
+	if (*args[1] == '!' || *args[1] == '/' || *args[1] == '.')
 		ParseChatCommand(args[1], pController);
 }
 
