@@ -1,7 +1,7 @@
 # vim: set sts=2 ts=8 sw=2 tw=99 et ft=python:
 import os
 
-MMSPlugin.plugin_name = 'cs2fixes'
+MMSPlugin.plugin_name = 'cs2scrim'
 
 for sdk_name in MMSPlugin.sdks:
   for cxx in MMSPlugin.all_targets:

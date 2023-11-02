@@ -26,7 +26,7 @@
 #include "networksystem/inetworkserializer.h"
 #include <iserver.h>
 
-class CS2Fixes : public ISmmPlugin, public IMetamodListener
+class CS2Scrim : public ISmmPlugin, public IMetamodListener
 {
 public:
 	bool Load(PluginId id, ISmmAPI *ismm, char *error, size_t maxlen, bool late);
@@ -67,6 +67,6 @@ public:
 	const char *GetLogTag();
 };
 
-extern CS2Fixes g_CS2Fixes;
+extern CS2Scrim g_CS2Scrim;
 
 PLUGIN_GLOBALVARS();
