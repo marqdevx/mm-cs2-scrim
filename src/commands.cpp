@@ -222,11 +222,18 @@ CON_COMMAND_CHAT(coach, "Request slot coach")
 
 	if (!pTarget)
 		return;
-
-	pTarget->GetPawn()->CommitSuicide(false, true);
 	
 	player->m_pInGameMoneyServices->m_iAccount = 0;
 
+	//Check it is not existing already
+	
+	FOR_EACH_VEC(coaches,i){
+		if(coaches[i]->GetPlayerSlot() == iPlayer){
+			ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "Your are already a coach type .uncoach to be a player");
+			return;
+		}
+	}
+	
 	coaches.AddToTail(player);
 	
 	ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "Your userid is %i, slot: %i, retrieved slot: %i", g_pEngineServer2->GetPlayerUserId(iPlayer).Get(), iPlayer, g_playerManager->GetSlotFromUserId(g_pEngineServer2->GetPlayerUserId(iPlayer).Get()));
