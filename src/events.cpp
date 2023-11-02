@@ -65,49 +65,6 @@ CON_COMMAND_F(c_force_ct, "toggle forcing CTs on every round", FCVAR_SPONLY | FC
 	Message("Forcing CTs on every round is now %s.\n", g_bForceCT ? "ON" : "OFF");
 }
 
-extern CUtlVector <CCSPlayerController*> coaches;
-GAME_EVENT_F(round_prestart)
-{
-	
-
-	for (int i = 1; i <= MAXPLAYERS; i++)
-	{
-		
-		// Only do this for Ts, ignore CTs and specs
-		/*if (!pController || pController->m_iTeamNum() != CS_TEAM_T)
-			continue;
-
-		addresses::CCSPlayerController_SwitchTeam(pController, CS_TEAM_CT);*/
-	}
-}
-
-float coach_timer = 18;
-
-GAME_EVENT_F(round_start)
-{
-	if (coaches.Count() < 1) return;
-	
-	ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX"Coaches: %i", coaches.Count());
-	FOR_EACH_VEC(coaches,i){
-		ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX"Coach %i:%s", i+1, coaches[i]->GetPlayerName());
-
-		CCSPlayerController *pTarget = (CCSPlayerController *)g_pEntitySystem->GetBaseEntity((CEntityIndex)(coaches[i]->GetPlayerSlot() + 1));
-		pTarget->m_pInGameMoneyServices->m_iAccount = 0;
-	}
-
-	// Need to wait until freeze time is over or it will be stuck with a black screen
-	new CTimer(coach_timer, false, false, []()
-	{
-		FOR_EACH_VEC(coaches,i){
-			coaches[i]->GetPawn()->CommitSuicide(false, true);
-			coaches[i]->m_pActionTrackingServices->m_matchStats().m_iKills = 0;
-			coaches[i]->m_pActionTrackingServices->m_matchStats().m_iDeaths = 0;
-			coaches[i]->m_pActionTrackingServices->m_matchStats().m_iAssists = 0;
-			coaches[i]->m_pActionTrackingServices->m_matchStats().m_iDamage = 0;
-		}
-	});
-}
-
 bool g_bBlockTeamMessages = true;
 
 CON_COMMAND_F(c_toggle_team_messages, "toggle team messages", FCVAR_SPONLY | FCVAR_LINKED_CONCOMMAND)
@@ -125,10 +82,48 @@ GAME_EVENT_F(player_spawn)
 {
 	CBasePlayerController *pController = (CBasePlayerController*)pEvent->GetPlayerController("userid");
 
-
 	if (!pController)
 		return;
 	/**/
-	
+}
 
+//Coach
+float coach_timer = 18;
+
+extern CUtlVector <CCSPlayerController*> coaches;
+
+GAME_EVENT_F(round_prestart)
+{
+	if (coaches.Count() < 1) return;
+
+	ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX"Coaches: %i", coaches.Count());
+
+	FOR_EACH_VEC(coaches,i){
+		ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX"Coach %i:%s", i+1, coaches[i]->GetPlayerName());
+
+		CCSPlayerController *pTarget = (CCSPlayerController *)g_pEntitySystem->GetBaseEntity((CEntityIndex)(coaches[i]->GetPlayerSlot() + 1));
+		pTarget->m_pInGameMoneyServices->m_iAccount = 0;
+	}
+
+	for (int i = 1; i <= MAXPLAYERS; i++)
+	{
+		// Only do this for Ts, ignore CTs and specs
+		/*if (!pController || pController->m_iTeamNum() != CS_TEAM_T)
+			continue;
+
+		addresses::CCSPlayerController_SwitchTeam(pController, CS_TEAM_CT);*/
+	}
+}
+
+GAME_EVENT_F(round_freeze_end)
+{
+	if (coaches.Count() < 1) return;
+
+	FOR_EACH_VEC(coaches,i){
+		coaches[i]->GetPawn()->CommitSuicide(false, true);
+		coaches[i]->m_pActionTrackingServices->m_matchStats().m_iKills = 0;
+		coaches[i]->m_pActionTrackingServices->m_matchStats().m_iDeaths = 0;
+		coaches[i]->m_pActionTrackingServices->m_matchStats().m_iAssists = 0;
+		coaches[i]->m_pActionTrackingServices->m_matchStats().m_iDamage = 0;
+	}
 }

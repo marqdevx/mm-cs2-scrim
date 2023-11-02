@@ -233,7 +233,7 @@ CON_COMMAND_CHAT(coach, "Request slot coach")
 			return;
 		}
 	}
-	
+
 	coaches.AddToTail(player);
 	
 	ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "Your userid is %i, slot: %i, retrieved slot: %i", g_pEngineServer2->GetPlayerUserId(iPlayer).Get(), iPlayer, g_playerManager->GetSlotFromUserId(g_pEngineServer2->GetPlayerUserId(iPlayer).Get()));
@@ -260,19 +260,4 @@ CON_COMMAND_CHAT(uncoach, "Undo slot coach")
 	}
 
 	ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "Your userid is %i, slot: %i, retrieved slot: %i", g_pEngineServer2->GetPlayerUserId(iPlayer).Get(), iPlayer, g_playerManager->GetSlotFromUserId(g_pEngineServer2->GetPlayerUserId(iPlayer).Get()));
-}
-
-extern float coach_timer;
-
-CON_COMMAND_CHAT(set_coach_timer, "Configure coach killing timer")
-{
-	
-	if (args.ArgC() < 2)
-	{
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "Usage: !set_coach_timer <time i.e 15>");
-		return;
-	}
-
-	coach_timer = atoi(args[1]);
-	ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX "coach timer set to %f", coach_timer);
 }
