@@ -81,6 +81,8 @@ GAME_EVENT_F(round_prestart)
 	}
 }
 
+float coach_timer = 18;
+
 GAME_EVENT_F(round_start)
 {
 	if (coaches.Count() < 1) return;
@@ -94,7 +96,7 @@ GAME_EVENT_F(round_start)
 	}
 
 	// Need to wait until freeze time is over or it will be stuck with a black screen
-	new CTimer(14.0f, false, false, []()
+	new CTimer(coach_timer, false, false, []()
 	{
 		FOR_EACH_VEC(coaches,i){
 			coaches[i]->GetPawn()->CommitSuicide(false, true);
