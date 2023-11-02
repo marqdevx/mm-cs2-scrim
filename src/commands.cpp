@@ -39,6 +39,8 @@ extern IVEngineServer2* g_pEngineServer2;
 extern int g_targetPawn;
 extern int g_targetController;
 
+extern bool practiceMode;
+
 void ParseChatCommand(const char *pMessage, CCSPlayerController *pController)
 {
 	if (!pController)
@@ -90,6 +92,122 @@ CON_COMMAND_CHAT(myuid, "test")
 	int iPlayer = player->GetPlayerSlot();
 
 	ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "Your userid is %i, slot: %i, retrieved slot: %i", g_pEngineServer2->GetPlayerUserId(iPlayer).Get(), iPlayer, g_playerManager->GetSlotFromUserId(g_pEngineServer2->GetPlayerUserId(iPlayer).Get()));
+}
+
+
+bool match_paused = false;
+bool ct_ready = true;
+bool t_ready = true;
+
+CON_COMMAND_CHAT(pause, "Request pause")
+{
+	if (!player)
+		return;
+
+	int iPlayer = player->GetPlayerSlot();
+
+	CBasePlayerController* pPlayer = (CBasePlayerController*)g_pEntitySystem->GetBaseEntity((CEntityIndex)(player->GetPlayerSlot() + 1));
+
+	g_pEngineServer2->ServerCommand("mp_pause_match");
+
+	ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX"%s requested a pause", player->GetPlayerName());
+
+	match_paused = true;
+	ct_ready = false;
+	t_ready = false;	
+}
+
+CON_COMMAND_CHAT(unpause, "Request unpause")
+{
+	if (!player)
+		return;
+
+	if(!match_paused)
+		return;
+	
+	CBasePlayerController* pPlayer = (CBasePlayerController*)g_pEntitySystem->GetBaseEntity((CEntityIndex)(player->GetPlayerSlot() + 1));
+	
+	int teamSide = pPlayer->m_iTeamNum();
+	if( teamSide == CS_TEAM_T && !t_ready){
+		t_ready = true;
+	}else if( teamSide == CS_TEAM_CT && !ct_ready){
+		ct_ready = true;
+	}
+
+	if(ct_ready && !t_ready){
+		ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX"CT ready, type .unpause");
+		return;
+	}else if(!ct_ready && t_ready){
+		ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX"T ready, type .unpause");
+		return;
+	}
+
+	match_paused = false;
+	ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX"Match \2unpaused");
+	g_pEngineServer2->ServerCommand("mp_unpause_match");
+}
+
+CON_COMMAND_CHAT(spawn, "teleport to desired spawn")
+{
+	if (!player)
+		return;
+	
+	if (!practiceMode){
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX"Only available on practice mode");
+		return;
+	}
+
+	if (args.ArgC() < 2)
+	{
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "Usage: !spawn <spawn number>");
+		return;
+	}
+
+	char teamName[256];
+	if(player->m_iTeamNum == CS_TEAM_T){
+		V_snprintf(teamName, sizeof(teamName), "info_player_terrorist");
+	}else if(player->m_iTeamNum == CS_TEAM_CT){
+		V_snprintf(teamName, sizeof(teamName), "info_player_counterterrorist");
+	}else{
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX"You cannot teleport in spectator!");
+		return;
+	}
+
+	//Count spawnpoints (info_player_counterterrorist & info_player_terrorist)
+	SpawnPoint* spawn = nullptr;
+	CUtlVector<SpawnPoint*> spawns;
+	while (nullptr != (spawn = (SpawnPoint*)UTIL_FindEntityByClassname(spawn, teamName)))
+	{
+		if (spawn->m_bEnabled())
+		{
+			// ClientPrint(player, HUD_PRINTTALK, "Spawn %i: %f / %f / %f", spawns.Count(), spawn->GetAbsOrigin().x, spawn->GetAbsOrigin().y, spawn->GetAbsOrigin().z);
+			spawns.AddToTail(spawn);
+		}
+	}
+
+	//Pick and get position of random spawnpoint
+	//Spawns selection from 1 to spawns.Count()
+	int targetSpawn = atoi(args[1]) - 1;
+	int spawnIndex = targetSpawn % spawns.Count();
+	Vector spawnpos = spawns[spawnIndex]->GetAbsOrigin();
+
+	//Here's where the mess starts
+	CBasePlayerPawn *pPawn = player->GetPawn();
+	if (!pPawn)
+	{
+		return;
+	}
+	if (pPawn->m_iHealth() <= 0)
+	{
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX"You cannot teleport when dead!");
+		return;
+	}
+
+	int totalSpawns = spawns.Count();
+
+	pPawn->SetAbsOrigin(spawnpos);
+
+	ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX"You have been teleported to spawn. %i/%i", spawnIndex +1, totalSpawns);			
 }
 
 CUtlVector <CCSPlayerController*> coaches;
