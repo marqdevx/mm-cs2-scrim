@@ -96,15 +96,11 @@ GAME_EVENT_F(round_start)
 {
 	if (coaches.Count() < 1) return;
 
-	ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX"Coaches: %i", coaches.Count());
-
 	FOR_EACH_VEC(coaches,i){
-		ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX"Coach %i:%s", i+1, coaches[i]->GetPlayerName());
-
 		CCSPlayerController *pTarget = (CCSPlayerController *)g_pEntitySystem->GetBaseEntity((CEntityIndex)(coaches[i]->GetPlayerSlot() + 1));
 		pTarget->m_pInGameMoneyServices->m_iAccount = 0;
 	}
-
+	
 	for (int i = 1; i <= MAXPLAYERS; i++)
 	{
 		// Only do this for Ts, ignore CTs and specs

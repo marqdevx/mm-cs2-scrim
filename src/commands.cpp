@@ -212,6 +212,15 @@ CON_COMMAND_CHAT(spawn, "teleport to desired spawn")
 
 CUtlVector <CCSPlayerController*> coaches;
 
+void print_coaches(){
+	if (coaches.Count() < 1) return;
+	
+	ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX"Coaches list:", coaches.Count());
+	FOR_EACH_VEC(coaches,i){
+		ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX"Coach %i:%s", i+1, coaches[i]->GetPlayerName());
+	}
+}
+
 CON_COMMAND_CHAT(coach, "Request slot coach")
 {
 	if (!player)
@@ -229,14 +238,16 @@ CON_COMMAND_CHAT(coach, "Request slot coach")
 	
 	FOR_EACH_VEC(coaches,i){
 		if(coaches[i]->GetPlayerSlot() == iPlayer){
-			ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "Your are already a coach type .uncoach to be a player");
+			ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "Your are already a coach type \4.uncoach \1to be a player");
 			return;
 		}
 	}
 
 	coaches.AddToTail(player);
 	
-	ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "Your userid is %i, slot: %i, retrieved slot: %i", g_pEngineServer2->GetPlayerUserId(iPlayer).Get(), iPlayer, g_playerManager->GetSlotFromUserId(g_pEngineServer2->GetPlayerUserId(iPlayer).Get()));
+	ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "Coach enabled, type \4.uncoach \1to cancel");
+	print_coaches();
+
 }
 
 CON_COMMAND_CHAT(uncoach, "Undo slot coach")
@@ -255,9 +266,10 @@ CON_COMMAND_CHAT(uncoach, "Undo slot coach")
 	
 	FOR_EACH_VEC(coaches,i){
 		if(coaches[i]->GetPlayerSlot() == iPlayer){
-			coaches.Remove(i);	
+			coaches.Remove(i);
 		}
 	}
 
-	ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "Your userid is %i, slot: %i, retrieved slot: %i", g_pEngineServer2->GetPlayerUserId(iPlayer).Get(), iPlayer, g_playerManager->GetSlotFromUserId(g_pEngineServer2->GetPlayerUserId(iPlayer).Get()));
+	ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "You are no longer set as \4coach\1");
+	print_coaches();
 }
