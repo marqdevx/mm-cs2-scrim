@@ -92,7 +92,7 @@ float coach_timer = 18;
 
 extern CUtlVector <CCSPlayerController*> coaches;
 
-GAME_EVENT_F(round_prestart)
+GAME_EVENT_F(round_start)
 {
 	if (coaches.Count() < 1) return;
 
