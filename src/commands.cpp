@@ -176,9 +176,21 @@ CON_COMMAND_CHAT(spawn, "teleport to desired spawn")
 	//Count spawnpoints (info_player_counterterrorist & info_player_terrorist)
 	SpawnPoint* spawn = nullptr;
 	CUtlVector<SpawnPoint*> spawns;
+
+	int minimum_priority = 1;
 	while (nullptr != (spawn = (SpawnPoint*)UTIL_FindEntityByClassname(spawn, teamName)))
 	{
-		if (spawn->m_bEnabled())
+		if (spawn->m_bEnabled() && spawn->m_iPriority() < minimum_priority)
+		{
+			minimum_priority = spawn->m_iPriority();
+			// ClientPrint(player, HUD_PRINTTALK, "Spawn %i: %f / %f / %f", spawns.Count(), spawn->GetAbsOrigin().x, spawn->GetAbsOrigin().y, spawn->GetAbsOrigin().z);
+			//spawns.AddToTail(spawn);
+		}
+	}
+
+	while (nullptr != (spawn = (SpawnPoint*)UTIL_FindEntityByClassname(spawn, teamName)))
+	{
+		if (spawn->m_bEnabled() && spawn->m_iPriority() == minimum_priority)
 		{
 			// ClientPrint(player, HUD_PRINTTALK, "Spawn %i: %f / %f / %f", spawns.Count(), spawn->GetAbsOrigin().x, spawn->GetAbsOrigin().y, spawn->GetAbsOrigin().z);
 			spawns.AddToTail(spawn);
@@ -190,6 +202,7 @@ CON_COMMAND_CHAT(spawn, "teleport to desired spawn")
 	int targetSpawn = atoi(args[1]) - 1;
 	int spawnIndex = targetSpawn % spawns.Count();
 	Vector spawnpos = spawns[spawnIndex]->GetAbsOrigin();
+	int spawn_priority = spawns[spawnIndex]->m_iPriority();
 
 	//Here's where the mess starts
 	CBasePlayerPawn *pPawn = player->GetPawn();
@@ -207,7 +220,7 @@ CON_COMMAND_CHAT(spawn, "teleport to desired spawn")
 
 	pPawn->SetAbsOrigin(spawnpos);
 
-	ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX"You have been teleported to spawn. %i/%i", spawnIndex +1, totalSpawns);			
+	ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX"You have been teleported to spawn. %i/%i priority:%i", spawnIndex +1, totalSpawns, spawn_priority);			
 }
 
 CUtlVector <CCSPlayerController*> coaches;
