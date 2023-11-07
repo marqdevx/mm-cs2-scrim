@@ -1,11 +1,15 @@
 ![Build pass](https://github.com/marqdevx/mm-cs2-scrim/actions/workflows/compile-metamod-addon.yaml/badge.svg)
 
-## This repository is just a tweak of https://github.com/Source2ZE/CS2Fixes/
-Removing "unnecessary" features from the original addon, to have the minimum to just run the commands.
+## IMPORTANT
+This repository is based on https://github.com/Source2ZE/CS2Fixes/
+Removing "unnecessary" features from the original addon.
+Thanks for the work!
 
-## DISCLAIMER: *not* responsible for any issues or breakages caused by the plugin. 
+```
+DISCLAIMER: *not* responsible for any issues or breakages caused by the plugin. 
+```
 
-# Competitive Practice & Scrim for CS2
+# Addon information
 This plugin adds the minimum requirements for competitive teams that need a more handy way of managing a few commands from the server side, like config management or replay recording.
 
 ## Available Commands
@@ -18,27 +22,37 @@ This plugin adds the minimum requirements for competitive teams that need a more
 * Scrim commands  
   `.pause`: pauses the match  
   `.unpause`: request the unpause  
+  * Coach  
+    `.coach`: switch to coach  
+    `.uncoach`: return as a player  
   * Admin only  
     `.record`: start the demo recording  
     `.stoprecord`: finish the recording and save it under `gotv/<date>.dem`  
     `.restore <round>`: load the desired round's backup  
     `.forceunpause`: force the unpause  
 
+* Practice commands  
+    `.spawn`: move to the desired competitive spawn i.e `.spawn 2`  
+
 ## Roadmap
 - Scrim
   - [X] Pauses
   - [X] Medic (round backup)
-  - [ ] Coach
+  - [X] Coach
   - [X] gotv .record
     - [X] include date and time
     - [ ] include map name
 - Practice
-  - [X] Map
-  - [X] Spawns
-    - [ ] Only show competitive spawns
-  - [ ] Remove smokes
-  - [ ] Move to spec
-  - [ ] Noclip
+  - Maps
+    - [X] Map
+    - [X] Spawns
+      - [X] Only show competitive spawns
+  - Utility
+    - [ ] Remove smokes
+    - [ ] Rethrow
+  - Misc
+    - [ ] Move to spec
+    - [ ] Noclip
 
 ## Compilation
 
