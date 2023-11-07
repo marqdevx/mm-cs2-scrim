@@ -34,7 +34,8 @@ This plugin adds the minimum requirements for competitive teams that need a more
     - [ ] include map name
 - Practice
   - [X] Map
-  - [ ] Spawns
+  - [X] Spawns
+    - [ ] Only show competitive spawns
   - [ ] Remove smokes
   - [ ] Move to spec
   - [ ] Noclip
