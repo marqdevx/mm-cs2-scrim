@@ -20,6 +20,8 @@
 #include "protobuf/generated/cstrike15_usermessages.pb.h"
 #include "protobuf/generated/usermessages.pb.h"
 #include "protobuf/generated/cs_gameevents.pb.h"
+#include "protobuf/generated/gameevents.pb.h"
+#include "protobuf/generated/te.pb.h"
 
 #include "cs2fixes.h"
 #include "iserver.h"
@@ -28,17 +30,20 @@
 #include "common.h"
 #include "commands.h"
 #include "detours.h"
+#include "patches.h"
 #include "icvar.h"
 #include "interface.h"
 #include "tier0/dbg.h"
 #include "interfaces/cs2_interfaces.h"
-//#include "plat.h"
+#include "plat.h"
 #include "entitysystem.h"
 #include "engine/igameeventsystem.h"
 #include "ctimer.h"
 #include "playermanager.h"
 #include <entity.h>
 #include "adminsystem.h"
+#include "eventlistener.h"
+#include "gameconfig.h"
 
 #include "tier0/memdbgon.h"
 
@@ -47,6 +52,8 @@ CEntitySystem* g_pEntitySystem = nullptr;
 float g_flUniversalTime;
 float g_flLastTickedTime;
 bool g_bHasTicked;
+
+extern CUtlVector <CCSPlayerController*> coaches;
 
 void Message(const char *msg, ...)
 {
@@ -91,12 +98,10 @@ SH_DECL_HOOK6(IServerGameClients, ClientConnect, SH_NOATTRIB, 0, bool, CPlayerSl
 SH_DECL_HOOK8_void(IGameEventSystem, PostEventAbstract, SH_NOATTRIB, 0, CSplitScreenSlot, bool, int, const uint64*,
 	INetworkSerializable*, const void*, unsigned long, NetChannelBufType_t)
 SH_DECL_HOOK3_void(INetworkServerService, StartupServer, SH_NOATTRIB, 0, const GameSessionConfiguration_t&, ISource2WorldSession*, const char*);
+SH_DECL_HOOK6_void(ISource2GameEntities, CheckTransmit, SH_NOATTRIB, 0, CCheckTransmitInfo **, int, CBitVec<16384> &, const Entity2Networkable_t **, const uint16 *, int);
+SH_DECL_HOOK2_void(IServerGameClients, ClientCommand, SH_NOATTRIB, 0, CPlayerSlot, const CCommand &);
 
-
-// , bool, IRecipientFilter*, INetworkSerializable*, void* data, unsigned long nSize
-SH_DECL_HOOK2_void( IServerGameClients, ClientCommand, SH_NOATTRIB, 0, CPlayerSlot, const CCommand & );
-
-cs2scrim g_CS2Fixes;
+CS2Scrim g_CS2Scrim;
 
 // Should only be called within the active game loop (i e map should be loaded and active)
 // otherwise that'll be nullptr!
@@ -117,7 +122,7 @@ ConVar sample_cvar("sample_cvar", "42", 0);
 
 CON_COMMAND_F(sample_command, "Sample command", FCVAR_SPONLY | FCVAR_LINKED_CONCOMMAND)
 {
-	META_CONPRINTF( "Sample command called by %d. Command: %s\n", context.GetPlayerSlot(), args.GetCommandString() );
+	Message( "Sample command called by %d. Command: %s\n", context.GetPlayerSlot(), args.GetCommandString() );
 }
 
 CON_COMMAND_F(toggle_logs, "Toggle printing most logs and warnings", FCVAR_SPONLY | FCVAR_LINKED_CONCOMMAND)
@@ -126,20 +131,22 @@ CON_COMMAND_F(toggle_logs, "Toggle printing most logs and warnings", FCVAR_SPONL
 }
 
 IGameEventSystem* g_gameEventSystem;
-IGameEventManager2* g_gameEventManager;
+IGameEventManager2* g_gameEventManager = nullptr;
 INetworkGameServer* g_networkGameServer;
 CGlobalVars* gpGlobals = nullptr;
-CPlayerManager* g_playerManager;
+CPlayerManager* g_playerManager = nullptr;
 IVEngineServer2* g_pEngineServer2;
+CGameConfig *g_GameConfig = nullptr;
 
-PLUGIN_EXPOSE(cs2scrim, g_CS2Fixes);
-bool cs2scrim::Load(PluginId id, ISmmAPI *ismm, char *error, size_t maxlen, bool late)
+PLUGIN_EXPOSE(CS2Scrim, g_CS2Scrim);
+bool CS2Scrim::Load(PluginId id, ISmmAPI *ismm, char *error, size_t maxlen, bool late)
 {
 	PLUGIN_SAVEVARS();
 
 	GET_V_IFACE_CURRENT(GetEngineFactory, g_pEngineServer2, IVEngineServer2, SOURCE2ENGINETOSERVER_INTERFACE_VERSION);
 	GET_V_IFACE_CURRENT(GetEngineFactory, g_pCVar, ICvar, CVAR_INTERFACE_VERSION);
 	GET_V_IFACE_ANY(GetServerFactory, g_pSource2Server, ISource2Server, SOURCE2SERVER_INTERFACE_VERSION);
+	GET_V_IFACE_ANY(GetServerFactory, g_pSource2GameEntities, ISource2GameEntities, SOURCE2GAMEENTITIES_INTERFACE_VERSION);
 	GET_V_IFACE_ANY(GetServerFactory, g_pSource2GameClients, IServerGameClients, SOURCE2GAMECLIENTS_INTERFACE_VERSION);
 	GET_V_IFACE_ANY(GetEngineFactory, g_pNetworkServerService, INetworkServerService, NETWORKSERVERSERVICE_INTERFACE_VERSION);
 	GET_V_IFACE_ANY(GetEngineFactory, g_gameEventSystem, IGameEventSystem, GAMEEVENTSYSTEM_INTERFACE_VERSION);
@@ -149,23 +156,43 @@ bool cs2scrim::Load(PluginId id, ISmmAPI *ismm, char *error, size_t maxlen, bool
 	// this needs to run in case of a late load
 	gpGlobals = GetGameGlobals();
 
-	META_CONPRINTF( "Starting plugin.\n" );
+	Message( "Starting plugin.\n" );
 
-	SH_ADD_HOOK_MEMFUNC(IServerGameDLL, GameFrame, g_pSource2Server, this, &cs2scrim::Hook_GameFrame, true);
-	SH_ADD_HOOK_MEMFUNC(IServerGameClients, ClientActive, g_pSource2GameClients, this, &cs2scrim::Hook_ClientActive, true);
-	SH_ADD_HOOK_MEMFUNC(IServerGameClients, ClientDisconnect, g_pSource2GameClients, this, &cs2scrim::Hook_ClientDisconnect, true);
-	SH_ADD_HOOK_MEMFUNC(IServerGameClients, ClientPutInServer, g_pSource2GameClients, this, &cs2scrim::Hook_ClientPutInServer, true);
-	SH_ADD_HOOK_MEMFUNC(IServerGameClients, ClientSettingsChanged, g_pSource2GameClients, this, &cs2scrim::Hook_ClientSettingsChanged, false);
-	SH_ADD_HOOK_MEMFUNC(IServerGameClients, OnClientConnected, g_pSource2GameClients, this, &cs2scrim::Hook_OnClientConnected, false);
-	SH_ADD_HOOK_MEMFUNC(IServerGameClients, ClientConnect, g_pSource2GameClients, this, &cs2scrim::Hook_ClientConnect, false );
-	SH_ADD_HOOK_MEMFUNC(IServerGameClients, ClientCommand, g_pSource2GameClients, this, &cs2scrim::Hook_ClientCommand, false);
-	SH_ADD_HOOK_MEMFUNC(IGameEventSystem, PostEventAbstract, g_gameEventSystem, this, &cs2scrim::Hook_PostEvent, false);
-	SH_ADD_HOOK_MEMFUNC(INetworkServerService, StartupServer, g_pNetworkServerService, this, &cs2scrim::Hook_StartupServer, true);
+	SH_ADD_HOOK_MEMFUNC(IServerGameDLL, GameFrame, g_pSource2Server, this, &CS2Scrim::Hook_GameFrame, true);
+	SH_ADD_HOOK_MEMFUNC(IServerGameClients, ClientActive, g_pSource2GameClients, this, &CS2Scrim::Hook_ClientActive, true);
+	SH_ADD_HOOK_MEMFUNC(IServerGameClients, ClientDisconnect, g_pSource2GameClients, this, &CS2Scrim::Hook_ClientDisconnect, true);
+	SH_ADD_HOOK_MEMFUNC(IServerGameClients, ClientPutInServer, g_pSource2GameClients, this, &CS2Scrim::Hook_ClientPutInServer, true);
+	SH_ADD_HOOK_MEMFUNC(IServerGameClients, ClientSettingsChanged, g_pSource2GameClients, this, &CS2Scrim::Hook_ClientSettingsChanged, false);
+	SH_ADD_HOOK_MEMFUNC(IServerGameClients, OnClientConnected, g_pSource2GameClients, this, &CS2Scrim::Hook_OnClientConnected, false);
+	SH_ADD_HOOK_MEMFUNC(IServerGameClients, ClientConnect, g_pSource2GameClients, this, &CS2Scrim::Hook_ClientConnect, false );
+	SH_ADD_HOOK_MEMFUNC(IServerGameClients, ClientCommand, g_pSource2GameClients, this, &CS2Scrim::Hook_ClientCommand, false);
+	SH_ADD_HOOK_MEMFUNC(IGameEventSystem, PostEventAbstract, g_gameEventSystem, this, &CS2Scrim::Hook_PostEvent, false);
+	SH_ADD_HOOK_MEMFUNC(INetworkServerService, StartupServer, g_pNetworkServerService, this, &CS2Scrim::Hook_StartupServer, true);
+	SH_ADD_HOOK_MEMFUNC(ISource2GameEntities, CheckTransmit, g_pSource2GameEntities, this, &CS2Scrim::Hook_CheckTransmit, true);
 
 	META_CONPRINTF( "All hooks started!\n" );
-	
-	addresses::Initialize();
+
+	CBufferStringGrowable<256> gamedirpath;
+	g_pEngineServer2->GetGameDir(gamedirpath);
+
+	std::string gamedirname = CGameConfig::GetDirectoryName(gamedirpath.Get());
+
+	const char *gamedataPath = "addons/cs2scrim/gamedata/cs2fixes.games.txt";
+	Message("Loading %s for game: %s\n", gamedataPath, gamedirname.c_str());
+
+	g_GameConfig = new CGameConfig(gamedirname, gamedataPath);
+	char conf_error[255] = "";
+	if (!g_GameConfig->Init(g_pFullFileSystem, conf_error, sizeof(conf_error)))
+	{
+		snprintf(error, maxlen, "Could not read %s: %s", g_GameConfig->GetPath().c_str(), conf_error);
+		Panic("%s\n", error);
+		return false;
+	}
+
+	addresses::Initialize(g_GameConfig);
 	interfaces::Initialize();
+
+	Message( "All hooks started!\n" );
 
 	UnlockConVars();
 	UnlockConCommands();
@@ -174,15 +201,38 @@ bool cs2scrim::Load(PluginId id, ISmmAPI *ismm, char *error, size_t maxlen, bool
 
 	ConVar_Register(FCVAR_RELEASE | FCVAR_CLIENT_CAN_EXECUTE | FCVAR_GAMEDLL);
 
-	//InitPatches();
-	InitDetours();
+	bool requiredInitLoaded = true;
+
+	//if (!InitPatches(g_GameConfig))
+		//requiredInitLoaded = false;
+
+	if (!InitDetours(g_GameConfig))
+		requiredInitLoaded = false;
+
+	//if (!requiredInitLoaded)
+	//	return false;
 
 	g_playerManager = new CPlayerManager();
 	g_pAdminSystem = new CAdminSystem();
 
+	coaches.Purge();
+
 	// Steam authentication
-	new CTimer(1.0, true, true, []() {
+	new CTimer(1.0f, true, true, []()
+	{
 		g_playerManager->TryAuthenticate();
+	});
+
+	// Check hide distance
+	new CTimer(0.5f, true, true, []()
+	{
+		g_playerManager->CheckHideDistances();
+	});
+
+	// Check for the expiration of infractions like mutes or gags
+	new CTimer(30.0f, true, true, []()
+	{
+		g_playerManager->CheckInfractions();
 	});
 
 	g_gameEventManager = (IGameEventManager2*)(CALL_VIRTUAL(uintptr_t, 91, g_pSource2Server) - 8);
@@ -194,18 +244,23 @@ bool cs2scrim::Load(PluginId id, ISmmAPI *ismm, char *error, size_t maxlen, bool
 	return true;
 }
 
-bool cs2scrim::Unload(char *error, size_t maxlen)
+bool CS2Scrim::Unload(char *error, size_t maxlen)
 {
-	SH_REMOVE_HOOK_MEMFUNC(IServerGameDLL, GameFrame, g_pSource2Server, this, &cs2scrim::Hook_GameFrame, true);
-	SH_REMOVE_HOOK_MEMFUNC(IServerGameClients, ClientActive, g_pSource2GameClients, this, &cs2scrim::Hook_ClientActive, true);
-	SH_REMOVE_HOOK_MEMFUNC(IServerGameClients, ClientDisconnect, g_pSource2GameClients, this, &cs2scrim::Hook_ClientDisconnect, true);
-	SH_REMOVE_HOOK_MEMFUNC(IServerGameClients, ClientPutInServer, g_pSource2GameClients, this, &cs2scrim::Hook_ClientPutInServer, true);
-	SH_REMOVE_HOOK_MEMFUNC(IServerGameClients, ClientSettingsChanged, g_pSource2GameClients, this, &cs2scrim::Hook_ClientSettingsChanged, false);
-	SH_REMOVE_HOOK_MEMFUNC(IServerGameClients, OnClientConnected, g_pSource2GameClients, this, &cs2scrim::Hook_OnClientConnected, false);
-	SH_REMOVE_HOOK_MEMFUNC(IServerGameClients, ClientConnect, g_pSource2GameClients, this, &cs2scrim::Hook_ClientConnect, false);
-	SH_REMOVE_HOOK_MEMFUNC(IServerGameClients, ClientCommand, g_pSource2GameClients, this, &cs2scrim::Hook_ClientCommand, false);
-	SH_REMOVE_HOOK_MEMFUNC(IGameEventSystem, PostEventAbstract, g_gameEventSystem, this, &cs2scrim::Hook_PostEvent, false);
-	SH_REMOVE_HOOK_MEMFUNC(INetworkServerService, StartupServer, g_pNetworkServerService, this, &cs2scrim::Hook_StartupServer, true);
+	FOR_EACH_VEC(coaches,i){
+		coaches.Remove(i);
+	}
+	
+	SH_REMOVE_HOOK_MEMFUNC(IServerGameDLL, GameFrame, g_pSource2Server, this, &CS2Scrim::Hook_GameFrame, true);
+	SH_REMOVE_HOOK_MEMFUNC(IServerGameClients, ClientActive, g_pSource2GameClients, this, &CS2Scrim::Hook_ClientActive, true);
+	SH_REMOVE_HOOK_MEMFUNC(IServerGameClients, ClientDisconnect, g_pSource2GameClients, this, &CS2Scrim::Hook_ClientDisconnect, true);
+	SH_REMOVE_HOOK_MEMFUNC(IServerGameClients, ClientPutInServer, g_pSource2GameClients, this, &CS2Scrim::Hook_ClientPutInServer, true);
+	SH_REMOVE_HOOK_MEMFUNC(IServerGameClients, ClientSettingsChanged, g_pSource2GameClients, this, &CS2Scrim::Hook_ClientSettingsChanged, false);
+	SH_REMOVE_HOOK_MEMFUNC(IServerGameClients, OnClientConnected, g_pSource2GameClients, this, &CS2Scrim::Hook_OnClientConnected, false);
+	SH_REMOVE_HOOK_MEMFUNC(IServerGameClients, ClientConnect, g_pSource2GameClients, this, &CS2Scrim::Hook_ClientConnect, false);
+	SH_REMOVE_HOOK_MEMFUNC(IServerGameClients, ClientCommand, g_pSource2GameClients, this, &CS2Scrim::Hook_ClientCommand, false);
+	SH_REMOVE_HOOK_MEMFUNC(IGameEventSystem, PostEventAbstract, g_gameEventSystem, this, &CS2Scrim::Hook_PostEvent, false);
+	SH_REMOVE_HOOK_MEMFUNC(INetworkServerService, StartupServer, g_pNetworkServerService, this, &CS2Scrim::Hook_StartupServer, true);
+	SH_REMOVE_HOOK_MEMFUNC(ISource2GameEntities, CheckTransmit, g_pSource2GameEntities, this, &CS2Scrim::Hook_CheckTransmit, true);
 
 	ConVar_Unregister();
 
@@ -214,19 +269,30 @@ bool cs2scrim::Unload(char *error, size_t maxlen)
 	FlushAllDetours();
 	//UndoPatches();
 	RemoveTimers();
+	UnregisterEventListeners();
 
-	delete g_playerManager;
-	delete g_pAdminSystem;
+	if (g_playerManager != NULL)
+		delete g_playerManager;
+
+	if (g_pAdminSystem != NULL)
+		delete g_pAdminSystem;
+
+	if (g_GameConfig != NULL)
+		delete g_GameConfig;
 
 	return true;
 }
 
-void cs2scrim::Hook_StartupServer(const GameSessionConfiguration_t& config, ISource2WorldSession*, const char*)
+void CS2Scrim::Hook_StartupServer(const GameSessionConfiguration_t& config, ISource2WorldSession*, const char*)
 {
 	Message("startup server\n");
 
 	if(g_bHasTicked)
 		RemoveMapTimers();
+	
+	FOR_EACH_VEC(coaches,i){
+		coaches.Remove(i);
+	}
 
 	g_bHasTicked = false;
 	gpGlobals = GetGameGlobals();
@@ -236,18 +302,21 @@ void cs2scrim::Hook_StartupServer(const GameSessionConfiguration_t& config, ISou
 		Error("Failed to lookup gpGlobals\n");
 	}
 
+	RegisterEventListeners();
+
 	g_pEntitySystem = interfaces::pGameResourceServiceServer->GetGameEntitySystem();
 }
 
 
-void cs2scrim::Hook_PostEvent(CSplitScreenSlot nSlot, bool bLocalOnly, int nClientCount, const uint64* clients,
+void CS2Scrim::Hook_PostEvent(CSplitScreenSlot nSlot, bool bLocalOnly, int nClientCount, const uint64* clients,
 	INetworkSerializable* pEvent, const void* pData, unsigned long nSize, NetChannelBufType_t bufType)
 {
-	/*
+	// Message( "Hook_PostEvent(%d, %d, %d, %lli)\n", nSlot, bLocalOnly, nClientCount, clients );
+
 	NetMessageInfo_t* info = pEvent->GetNetMessageInfo();
 
 	//CMsgTEFireBullets
-	if (info->m_MessageId == GE_FireBulletsId)
+	if (info->m_MessageId == GE_FireBulletsId || info->m_MessageId == TE_WorldDecalId)
 	{
 		// Can later do a bit mask for players using stopsound but this will do for now
 		for (uint64 i = 0; i < MAXPLAYERS; i++)
@@ -258,65 +327,78 @@ void cs2scrim::Hook_PostEvent(CSplitScreenSlot nSlot, bool bLocalOnly, int nClie
 			if (!(*(uint64 *)clients & ((uint64)1 << i)))
 				continue;
 
-			if (pPlayer && pPlayer->IsUsingStopSound())
+			if (!pPlayer)
+				continue;
+
+			if ((info->m_MessageId == GE_FireBulletsId && pPlayer->IsUsingStopSound()) || 
+				(info->m_MessageId == TE_WorldDecalId && pPlayer->IsUsingStopDecals()))
 			{
 				*(uint64*)clients &= ~((uint64)1 << i);
 				nClientCount--;
 			}
 		}
-	}*/
+	}
 }
 
-void cs2scrim::AllPluginsLoaded()
+void CS2Scrim::AllPluginsLoaded()
 {
 	/* This is where we'd do stuff that relies on the mod or other plugins 
 	 * being initialized (for example, cvars added and events registered).
 	 */
+
+	Message( "AllPluginsLoaded\n" );
 }
 
-void cs2scrim::Hook_ClientActive( CPlayerSlot slot, bool bLoadGame, const char *pszName, uint64 xuid )
+void CS2Scrim::Hook_ClientActive( CPlayerSlot slot, bool bLoadGame, const char *pszName, uint64 xuid )
 {
-	META_CONPRINTF( "Hook_ClientActive(%d, %d, \"%s\", %lli)\n", slot, bLoadGame, pszName, xuid );
+	Message( "Hook_ClientActive(%d, %d, \"%s\", %lli)\n", slot, bLoadGame, pszName, xuid );
 }
 
-void cs2scrim::Hook_ClientCommand( CPlayerSlot slot, const CCommand &args )
+void CS2Scrim::Hook_ClientCommand( CPlayerSlot slot, const CCommand &args )
 {
-	META_CONPRINTF( "Hook_ClientCommand(%d, \"%s\")\n", slot, args.GetCommandString() );
+#ifdef _DEBUG
+	Message( "Hook_ClientCommand(%d, \"%s\")\n", slot, args.GetCommandString() );
+#endif
 }
 
-void cs2scrim::Hook_ClientSettingsChanged( CPlayerSlot slot )
+void CS2Scrim::Hook_ClientSettingsChanged( CPlayerSlot slot )
 {
-	META_CONPRINTF( "Hook_ClientSettingsChanged(%d)\n", slot );
+#ifdef _DEBUG
+	Message( "Hook_ClientSettingsChanged(%d)\n", slot );
+#endif
 }
 
-void cs2scrim::Hook_OnClientConnected( CPlayerSlot slot, const char *pszName, uint64 xuid, const char *pszNetworkID, const char *pszAddress, bool bFakePlayer )
+void CS2Scrim::Hook_OnClientConnected( CPlayerSlot slot, const char *pszName, uint64 xuid, const char *pszNetworkID, const char *pszAddress, bool bFakePlayer )
 {
+	Message( "Hook_OnClientConnected(%d, \"%s\", %lli, \"%s\", \"%s\", %d)\n", slot, pszName, xuid, pszNetworkID, pszAddress, bFakePlayer );
+
 	if(bFakePlayer)
 		g_playerManager->OnBotConnected(slot);
-
-	META_CONPRINTF( "Hook_OnClientConnected(%d, \"%s\", %lli, \"%s\", \"%s\", %d)\n", slot, pszName, xuid, pszNetworkID, pszAddress, bFakePlayer );
 }
 
-bool cs2scrim::Hook_ClientConnect( CPlayerSlot slot, const char *pszName, uint64 xuid, const char *pszNetworkID, bool unk1, CBufferString *pRejectReason )
+bool CS2Scrim::Hook_ClientConnect( CPlayerSlot slot, const char *pszName, uint64 xuid, const char *pszNetworkID, bool unk1, CBufferString *pRejectReason )
 {
-	g_playerManager->OnClientConnected(slot);
-	META_CONPRINTF( "Hook_ClientConnect(%d, \"%s\", %lli, \"%s\", %d, \"%s\")\n", slot, pszName, xuid, pszNetworkID, unk1, pRejectReason->ToGrowable()->Get() );
+	Message( "Hook_ClientConnect(%d, \"%s\", %lli, \"%s\", %d, \"%s\")\n", slot, pszName, xuid, pszNetworkID, unk1, pRejectReason->ToGrowable()->Get() );
+		
+	if (!g_playerManager->OnClientConnected(slot))
+		RETURN_META_VALUE(MRES_SUPERCEDE, false);
 
 	RETURN_META_VALUE(MRES_IGNORED, true);
 }
 
-void cs2scrim::Hook_ClientPutInServer( CPlayerSlot slot, char const *pszName, int type, uint64 xuid )
+void CS2Scrim::Hook_ClientPutInServer( CPlayerSlot slot, char const *pszName, int type, uint64 xuid )
 {
-	META_CONPRINTF( "Hook_ClientPutInServer(%d, \"%s\", %d, %d, %lli)\n", slot, pszName, type, xuid );
+	Message( "Hook_ClientPutInServer(%d, \"%s\", %d, %d, %lli)\n", slot, pszName, type, xuid );
 }
 
-void cs2scrim::Hook_ClientDisconnect( CPlayerSlot slot, int reason, const char *pszName, uint64 xuid, const char *pszNetworkID )
+void CS2Scrim::Hook_ClientDisconnect( CPlayerSlot slot, int reason, const char *pszName, uint64 xuid, const char *pszNetworkID )
 {
+	Message( "Hook_ClientDisconnect(%d, %d, \"%s\", %lli, \"%s\")\n", slot, reason, pszName, xuid, pszNetworkID );
+
 	g_playerManager->OnClientDisconnect(slot);
-	META_CONPRINTF( "Hook_ClientDisconnect(%d, %d, \"%s\", %lli, \"%s\")\n", slot, reason, pszName, xuid, pszNetworkID );
 }
 
-void cs2scrim::Hook_GameFrame( bool simulating, bool bFirstTick, bool bLastTick )
+void CS2Scrim::Hook_GameFrame( bool simulating, bool bFirstTick, bool bLastTick )
 {
 	/**
 	 * simulating:
@@ -367,69 +449,118 @@ void cs2scrim::Hook_GameFrame( bool simulating, bool bFirstTick, bool bLastTick 
 	}
 }
 
+void CS2Scrim::Hook_CheckTransmit(CCheckTransmitInfo **ppInfoList, int infoCount, CBitVec<16384> &unionTransmitEdicts,
+								const Entity2Networkable_t **pNetworkables, const uint16 *pEntityIndicies, int nEntities)
+{
+	if (!g_pEntitySystem)
+		return;
+
+	for (int i = 0; i < infoCount; i++)
+	{
+		auto &pInfo = ppInfoList[i];
+
+		// offset 560 happens to have a player index here,
+		// though this is probably part of the client class that contains the CCheckTransmitInfo
+		int iPlayerSlot = (int)*((uint8 *)pInfo + 560);
+
+		auto pPlayer = g_playerManager->GetPlayer(iPlayerSlot);
+
+		if (!pPlayer)
+			continue;
+
+		auto pSelfController = (CBasePlayerController *)g_pEntitySystem->GetBaseEntity((CEntityIndex)(pPlayer->GetPlayerSlot().Get() + 1));
+
+		if (!pSelfController)
+			continue;
+
+		auto pSelfPawn = pSelfController->GetPawn();
+
+		if (!pSelfPawn || !pSelfPawn->IsAlive())
+			continue;
+
+		for (int i = 1; i <= MAXPLAYERS; i++)
+		{
+			if (!pPlayer->ShouldBlockTransmit(i - 1))
+				continue;
+
+			auto pController = (CBasePlayerController *)g_pEntitySystem->GetBaseEntity((CEntityIndex)i);
+
+			if (!pController)
+				continue;
+
+			auto pPawn = pController->GetPawn();
+
+			if (!pPawn)
+				continue;
+
+			pInfo->m_pTransmitEntity->Clear(pPawn->entindex());
+		}
+	}
+}
+
 // Potentially might not work
-void cs2scrim::OnLevelInit( char const *pMapName,
+void CS2Scrim::OnLevelInit( char const *pMapName,
 									 char const *pMapEntities,
 									 char const *pOldLevel,
 									 char const *pLandmarkName,
 									 bool loadGame,
 									 bool background )
 {
-	META_CONPRINTF("OnLevelInit(%s)\n", pMapName);
+	Message("OnLevelInit(%s)\n", pMapName);
 }
 
 // Potentially might not work
-void cs2scrim::OnLevelShutdown()
+void CS2Scrim::OnLevelShutdown()
 {
-	META_CONPRINTF("OnLevelShutdown()\n");
+	Message("OnLevelShutdown()\n");
 }
 
-bool cs2scrim::Pause(char *error, size_t maxlen)
-{
-	return true;
-}
-
-bool cs2scrim::Unpause(char *error, size_t maxlen)
+bool CS2Scrim::Pause(char *error, size_t maxlen)
 {
 	return true;
 }
 
-const char *cs2scrim::GetLicense()
+bool CS2Scrim::Unpause(char *error, size_t maxlen)
+{
+	return true;
+}
+
+const char *CS2Scrim::GetLicense()
 {
 	return "MIT License";
 }
 
-const char *cs2scrim::GetVersion()
+const char *CS2Scrim::GetVersion()
 {
-	return "1.0.0.0";
+	return "1.0.2.0";
 }
 
-const char *cs2scrim::GetDate()
+const char *CS2Scrim::GetDate()
 {
 	return __DATE__;
 }
 
-const char *cs2scrim::GetLogTag()
+const char *CS2Scrim::GetLogTag()
 {
 	return "cs2scrim";
 }
 
-const char *cs2scrim::GetAuthor()
+const char *CS2Scrim::GetAuthor()
 {
 	return "marqdevx tweak over xen & poggu";
 }
 
-const char *cs2scrim::GetDescription()
+const char *CS2Scrim::GetDescription()
 {
 	return "A bunch of experiments thrown together into one big mess of a plugin.";
 }
 
-const char *cs2scrim::GetName()
+const char *CS2Scrim::GetName()
 {
 	return "cs2scrim";
 }
 
-const char *cs2scrim::GetURL()
+const char *CS2Scrim::GetURL()
 {
 	return "https://github.com/marqdevx/mm-cs2-scrim";
 }
