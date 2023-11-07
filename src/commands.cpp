@@ -228,9 +228,9 @@ CUtlVector <CCSPlayerController*> coaches;
 void print_coaches(){
 	if (coaches.Count() < 1) return;
 	
-	ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX"Coaches list:", coaches.Count());
+	ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX"\5%i \1active \5coaches", coaches.Count());
 	FOR_EACH_VEC(coaches,i){
-		ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX"Coach %i:%s", i+1, coaches[i]->GetPlayerName());
+		ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX"Coach %i: \5%s", i+1, coaches[i]->GetPlayerName());
 	}
 }
 
