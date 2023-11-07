@@ -21,6 +21,8 @@
 
 #include "cbaseplayercontroller.h"
 #include "services.h"
+#include "tier1/utlmap.h"
+
 extern CEntitySystem* g_pEntitySystem;
 
 class CCSPlayerController : public CBasePlayerController
@@ -30,6 +32,7 @@ public:
 
 	SCHEMA_FIELD(CCSPlayerController_InGameMoneyServices*, m_pInGameMoneyServices)
 	SCHEMA_FIELD(CCSPlayerController_ActionTrackingServices*, m_pActionTrackingServices)
+	SCHEMA_FIELD(CUtlSymbolLarge, m_szClan)
 
 	static CCSPlayerController* FromPawn(CCSPlayerPawn* pawn) { return (CCSPlayerController*)pawn->m_hController().Get(); }
 

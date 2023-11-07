@@ -53,6 +53,8 @@ float g_flUniversalTime;
 float g_flLastTickedTime;
 bool g_bHasTicked;
 
+extern CUtlVector <CCSPlayerController*> coaches;
+
 void Message(const char *msg, ...)
 {
 	va_list args;
@@ -242,6 +244,10 @@ bool CS2Scrim::Load(PluginId id, ISmmAPI *ismm, char *error, size_t maxlen, bool
 
 bool CS2Scrim::Unload(char *error, size_t maxlen)
 {
+	FOR_EACH_VEC(coaches,i){
+		coaches.Remove(i);
+	}
+	
 	SH_REMOVE_HOOK_MEMFUNC(IServerGameDLL, GameFrame, g_pSource2Server, this, &CS2Scrim::Hook_GameFrame, true);
 	SH_REMOVE_HOOK_MEMFUNC(IServerGameClients, ClientActive, g_pSource2GameClients, this, &CS2Scrim::Hook_ClientActive, true);
 	SH_REMOVE_HOOK_MEMFUNC(IServerGameClients, ClientDisconnect, g_pSource2GameClients, this, &CS2Scrim::Hook_ClientDisconnect, true);

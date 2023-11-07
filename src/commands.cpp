@@ -240,29 +240,39 @@ CON_COMMAND_CHAT(coach, "Request slot coach")
 		return;
 	
 	int iPlayer = player->GetPlayerSlot();
-	CBasePlayerController *pTarget = (CBasePlayerController *)g_pEntitySystem->GetBaseEntity((CEntityIndex)(iPlayer + 1));
 
-	if (!pTarget)
-		return;
-	
 	player->m_pInGameMoneyServices->m_iAccount = 0;
 
 	//Check it is not existing already
-	
 	FOR_EACH_VEC(coaches,i){
-		if(coaches[i]->GetPlayerSlot() == iPlayer){
-			ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "Your are already a coach type \4.uncoach \1to be a player");
+		if(coaches[i]->GetPlayerSlot() == iPlayer){	
+			ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "You are already a coach type \4.uncoach \1to be a player");
 			return;
 		}
 	}
 
 	coaches.AddToTail(player);
-	
+
 	ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "Coach enabled, type \4.uncoach \1to cancel");
 	print_coaches();
 
+	
+	CHandle<CCSPlayerController> hController = player->GetHandle();
+
+	// Gotta do this on the next frame...
+	new CTimer(0.0f, false, false, [hController]()
+	{
+		CCSPlayerController *pController = hController.Get();
+
+		if (!pController)
+			return;
+
+		pController->m_szClan = "Coaching:";
+		return;
+	});
 }
 
+//Todo, unify different aliases
 CON_COMMAND_CHAT(uncoach, "Undo slot coach")
 {
 	if (!player)
@@ -274,15 +284,16 @@ CON_COMMAND_CHAT(uncoach, "Undo slot coach")
 	if (!pTarget)
 		return;
 
-	player->m_pInGameMoneyServices->m_iAccount = 0;
-
-	
+	//Check it is not existing already
 	FOR_EACH_VEC(coaches,i){
 		if(coaches[i]->GetPlayerSlot() == iPlayer){
 			coaches.Remove(i);
+			player->m_pInGameMoneyServices->m_iAccount = 0;
+			player->m_szClan = "";
+			ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "You are no longer set as \4coach\1");
+			print_coaches();
+			return;
 		}
 	}
-
-	ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "You are no longer set as \4coach\1");
-	print_coaches();
+	ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "You haven't set as \4coach\1 yet");
 }
