@@ -1,11 +1,15 @@
 ![Build pass](https://github.com/marqdevx/mm-cs2-scrim/actions/workflows/compile-metamod-addon.yaml/badge.svg)
 
-## This repository is just a tweak of https://github.com/Source2ZE/CS2Fixes/
-Removing "unnecessary" features from the original addon, to have the minimum to just run the commands.
+## IMPORTANT
+This repository is based on https://github.com/Source2ZE/CS2Fixes/
+Removing "unnecessary" features from the original addon.
+Thanks for the work!
 
-## DISCLAIMER: *not* responsible for any issues or breakages caused by the plugin. 
+```
+DISCLAIMER: *not* responsible for any issues or breakages caused by the plugin. 
+```
 
-# Competitive Practice & Scrim for CS2
+# Addon information
 This plugin adds the minimum requirements for competitive teams that need a more handy way of managing a few commands from the server side, like config management or replay recording.
 
 ## Available Commands
