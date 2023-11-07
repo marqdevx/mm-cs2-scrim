@@ -18,27 +18,37 @@ This plugin adds the minimum requirements for competitive teams that need a more
 * Scrim commands  
   `.pause`: pauses the match  
   `.unpause`: request the unpause  
+  * Coach  
+    `.coach`: switch to coach  
+    `.uncoach`: return as a player  
   * Admin only  
     `.record`: start the demo recording  
     `.stoprecord`: finish the recording and save it under `gotv/<date>.dem`  
     `.restore <round>`: load the desired round's backup  
     `.forceunpause`: force the unpause  
 
+* Practice commands  
+    `.spawn`: move to the desired competitive spawn i.e `.spawn 2`  
+
 ## Roadmap
 - Scrim
   - [X] Pauses
   - [X] Medic (round backup)
-  - [ ] Coach
+  - [X] Coach
   - [X] gotv .record
     - [X] include date and time
     - [ ] include map name
 - Practice
-  - [X] Map
-  - [X] Spawns
-    - [ ] Only show competitive spawns
-  - [ ] Remove smokes
-  - [ ] Move to spec
-  - [ ] Noclip
+  - Maps
+    - [X] Map
+    - [X] Spawns
+      - [X] Only show competitive spawns
+  - Utility
+    - [ ] Remove smokes
+    - [ ] Rethrow
+  - Misc
+    - [ ] Move to spec
+    - [ ] Noclip
 
 ## Compilation
 
