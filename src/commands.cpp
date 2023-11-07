@@ -200,6 +200,8 @@ CON_COMMAND_CHAT(spawn, "teleport to desired spawn")
 	//Pick and get position of random spawnpoint
 	//Spawns selection from 1 to spawns.Count()
 	int targetSpawn = atoi(args[1]) - 1;
+	if (targetSpawn < 0) targetSpawn = 0;
+	
 	int spawnIndex = targetSpawn % spawns.Count();
 	Vector spawnpos = spawns[spawnIndex]->GetAbsOrigin();
 	int spawn_priority = spawns[spawnIndex]->m_iPriority();
