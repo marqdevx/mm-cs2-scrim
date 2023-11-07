@@ -34,9 +34,10 @@
 
 #include "tier0/memdbgon.h"
 
-
 extern CEntitySystem *g_pEntitySystem;
-extern IVEngineServer2 *g_pEngineServer2;
+extern IVEngineServer2* g_pEngineServer2;
+extern int g_targetPawn;
+extern int g_targetController;
 
 extern bool practiceMode;
 
@@ -54,6 +55,7 @@ void ParseChatCommand(const char *pMessage, CCSPlayerController *pController)
 	{
 		g_CommandList[index](args, pController);
 	}
+
 }
 
 void ClientPrintAll(int hud_dest, const char *msg, ...)
@@ -81,6 +83,17 @@ void ClientPrint(CBasePlayerController *player, int hud_dest, const char *msg, .
 
 	addresses::ClientPrint(player, hud_dest, buf, nullptr, nullptr, nullptr, nullptr);
 }
+
+CON_COMMAND_CHAT(myuid, "test")
+{
+	if (!player)
+		return;
+
+	int iPlayer = player->GetPlayerSlot();
+
+	ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "Your userid is %i, slot: %i, retrieved slot: %i", g_pEngineServer2->GetPlayerUserId(iPlayer).Get(), iPlayer, g_playerManager->GetSlotFromUserId(g_pEngineServer2->GetPlayerUserId(iPlayer).Get()));
+}
+
 
 bool match_paused = false;
 bool ct_ready = true;
@@ -163,9 +176,21 @@ CON_COMMAND_CHAT(spawn, "teleport to desired spawn")
 	//Count spawnpoints (info_player_counterterrorist & info_player_terrorist)
 	SpawnPoint* spawn = nullptr;
 	CUtlVector<SpawnPoint*> spawns;
+
+	int minimum_priority = 1;
 	while (nullptr != (spawn = (SpawnPoint*)UTIL_FindEntityByClassname(spawn, teamName)))
 	{
-		if (spawn->m_bEnabled())
+		if (spawn->m_bEnabled() && spawn->m_iPriority() < minimum_priority)
+		{
+			minimum_priority = spawn->m_iPriority();
+			// ClientPrint(player, HUD_PRINTTALK, "Spawn %i: %f / %f / %f", spawns.Count(), spawn->GetAbsOrigin().x, spawn->GetAbsOrigin().y, spawn->GetAbsOrigin().z);
+			//spawns.AddToTail(spawn);
+		}
+	}
+
+	while (nullptr != (spawn = (SpawnPoint*)UTIL_FindEntityByClassname(spawn, teamName)))
+	{
+		if (spawn->m_bEnabled() && spawn->m_iPriority() == minimum_priority)
 		{
 			// ClientPrint(player, HUD_PRINTTALK, "Spawn %i: %f / %f / %f", spawns.Count(), spawn->GetAbsOrigin().x, spawn->GetAbsOrigin().y, spawn->GetAbsOrigin().z);
 			spawns.AddToTail(spawn);
@@ -175,8 +200,11 @@ CON_COMMAND_CHAT(spawn, "teleport to desired spawn")
 	//Pick and get position of random spawnpoint
 	//Spawns selection from 1 to spawns.Count()
 	int targetSpawn = atoi(args[1]) - 1;
+	if (targetSpawn < 0) targetSpawn = 0;
+	
 	int spawnIndex = targetSpawn % spawns.Count();
 	Vector spawnpos = spawns[spawnIndex]->GetAbsOrigin();
+	int spawn_priority = spawns[spawnIndex]->m_iPriority();
 
 	//Here's where the mess starts
 	CBasePlayerPawn *pPawn = player->GetPawn();
@@ -194,57 +222,80 @@ CON_COMMAND_CHAT(spawn, "teleport to desired spawn")
 
 	pPawn->SetAbsOrigin(spawnpos);
 
-	ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX"You have been teleported to spawn. %i/%i", spawnIndex +1, totalSpawns);			
+	ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX"You have been teleported to spawn. %i/%i priority:%i", spawnIndex +1, totalSpawns, spawn_priority);			
 }
 
-/*
+CUtlVector <CCSPlayerController*> coaches;
 
-CON_COMMAND_CHAT(getorigin, "get your origin")
+void print_coaches(){
+	if (coaches.Count() < 1) return;
+	
+	ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX"\5%i \1active \5coaches", coaches.Count());
+	FOR_EACH_VEC(coaches,i){
+		ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX"Coach %i: \5%s", i+1, coaches[i]->GetPlayerName());
+	}
+}
+
+CON_COMMAND_CHAT(coach, "Request slot coach")
 {
 	if (!player)
 		return;
+	
+	int iPlayer = player->GetPlayerSlot();
 
-	Vector vecAbsOrigin = player->GetPawn()->GetAbsOrigin();
+	player->m_pInGameMoneyServices->m_iAccount = 0;
 
-	ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX"Your origin is %f %f %f", vecAbsOrigin.x, vecAbsOrigin.y, vecAbsOrigin.z);
+	//Check it is not existing already
+	FOR_EACH_VEC(coaches,i){
+		if(coaches[i]->GetPlayerSlot() == iPlayer){	
+			ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "You are already a coach type \4.uncoach \1to be a player");
+			return;
+		}
+	}
+
+	coaches.AddToTail(player);
+
+	ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "Coach enabled, type \4.uncoach \1to cancel");
+	print_coaches();
+
+	
+	CHandle<CCSPlayerController> hController = player->GetHandle();
+
+	// Gotta do this on the next frame...
+	new CTimer(0.0f, false, false, [hController]()
+	{
+		CCSPlayerController *pController = hController.Get();
+
+		if (!pController)
+			return;
+
+		pController->m_szClan = "Coaching:";
+		return;
+	});
 }
 
-CON_COMMAND_CHAT(setorigin, "set your origin")
+//Todo, unify different aliases
+CON_COMMAND_CHAT(uncoach, "Undo slot coach")
 {
 	if (!player)
 		return;
+	
+	int iPlayer = player->GetPlayerSlot();
+	CBasePlayerController *pTarget = (CBasePlayerController *)g_pEntitySystem->GetBaseEntity((CEntityIndex)(iPlayer + 1));
 
-	CBasePlayerPawn *pPawn = player->GetPawn();
-	Vector vecNewOrigin;
-	V_StringToVector(args.ArgS(), vecNewOrigin);
-
-	pPawn->SetAbsOrigin(vecNewOrigin);
-
-	ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX"Your origin is now %f %f %f", vecNewOrigin.x, vecNewOrigin.y, vecNewOrigin.z);
-}
-
-CON_COMMAND_CHAT(getstats, "get your stats")
-{
-	if (!player)
+	if (!pTarget)
 		return;
 
-	CSMatchStats_t *stats = &player->m_pActionTrackingServices->m_matchStats();
-
-	ClientPrint(player, HUD_PRINTCENTER, 
-		"Kills: %i\n"
-		"Deaths: %i\n"
-		"Assists: %i\n"
-		"Damage: %i"
-		, stats->m_iKills.Get(), stats->m_iDeaths.Get(), stats->m_iAssists.Get(), stats->m_iDamage.Get());
-
-	ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX"Kills: %d", stats->m_iKills.Get());
-	ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX"Deaths: %d", stats->m_iDeaths.Get());
-	ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX"Assists: %d", stats->m_iAssists.Get());
-	ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX"Damage: %d", stats->m_iDamage.Get());
+	//Check it is not existing already
+	FOR_EACH_VEC(coaches,i){
+		if(coaches[i]->GetPlayerSlot() == iPlayer){
+			coaches.Remove(i);
+			player->m_pInGameMoneyServices->m_iAccount = 0;
+			player->m_szClan = "";
+			ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "You are no longer set as \4coach\1");
+			print_coaches();
+			return;
+		}
+	}
+	ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "You haven't set as \4coach\1 yet");
 }
-
-*/
-// Lookup a weapon classname in the weapon map and "initialize" it.
-// Both m_bInitialized and m_iItemDefinitionIndex need to be set for a weapon to be pickable and not crash clients,
-// and m_iItemDefinitionIndex needs to be the correct ID from weapons.vdata so the gun behaves as it should.
-

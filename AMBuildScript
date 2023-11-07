@@ -188,7 +188,9 @@ class MMSPluginConfig(object):
     if builder.options.mms_path:
       self.mms_root = builder.options.mms_path
     else:
-      self.mms_root = ResolveEnvPath('MMSOURCE112', 'mmsource-1.12')
+      self.mms_root = ResolveEnvPath('MMSOURCE20', 'mmsource-2.0')
+      if not self.mms_root:
+        self.mms_root = ResolveEnvPath('MMSOURCE112', 'mmsource-1.12')
       if not self.mms_root:
         self.mms_root = ResolveEnvPath('MMSOURCE111', 'mmsource-1.11')
       if not self.mms_root:
@@ -410,7 +412,7 @@ class MMSPluginConfig(object):
     if compiler.target.arch == 'x86_64':
       compiler.defines += ['X64BITS', 'PLATFORM_64BITS']
 
-    if sdk.name in ['css', 'hl2dm', 'dods', 'sdk2013', 'bms', 'tf2', 'l4d', 'nucleardawn', 'l4d2', 'dota', 'cs2', 'pvkii']:
+    if sdk.name in ['css', 'hl2dm', 'dods', 'sdk2013', 'bms', 'tf2', 'l4d', 'nucleardawn', 'l4d2', 'pvkii']:
       if compiler.target.platform in ['linux', 'mac']:
         compiler.defines += ['NO_HOOK_MALLOC', 'NO_MALLOC_OVERRIDE']
 

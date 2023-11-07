@@ -20,13 +20,13 @@
 #pragma once
 
 #include <ISmmPlugin.h>
-#include <igameevents.h>
+#include "igameevents.h"
 #include <iplayerinfo.h>
 #include <sh_vector.h>
 #include "networksystem/inetworkserializer.h"
 #include <iserver.h>
 
-class cs2scrim : public ISmmPlugin, public IMetamodListener
+class CS2Scrim : public ISmmPlugin, public IMetamodListener
 {
 public:
 	bool Load(PluginId id, ISmmAPI *ismm, char *error, size_t maxlen, bool late);
@@ -53,6 +53,9 @@ public: //hooks
 	void Hook_OnClientConnected( CPlayerSlot slot, const char *pszName, uint64 xuid, const char *pszNetworkID, const char *pszAddress, bool bFakePlayer );
 	bool Hook_ClientConnect( CPlayerSlot slot, const char *pszName, uint64 xuid, const char *pszNetworkID, bool unk1, CBufferString *pRejectReason );
 	void Hook_ClientCommand( CPlayerSlot nSlot, const CCommand &_cmd );
+	void Hook_CheckTransmit(CCheckTransmitInfo **ppInfoList, int infoCount, CBitVec<16384> &unionTransmitEdicts,
+							const Entity2Networkable_t **pNetworkables, const uint16 *pEntityIndicies, int nEntities);
+
 public:
 	const char *GetAuthor();
 	const char *GetName();
@@ -64,6 +67,6 @@ public:
 	const char *GetLogTag();
 };
 
-extern cs2scrim g_CS2Fixes;
+extern CS2Scrim g_CS2Scrim;
 
 PLUGIN_GLOBALVARS();
