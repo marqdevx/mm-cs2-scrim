@@ -215,6 +215,8 @@ bool CS2Scrim::Load(PluginId id, ISmmAPI *ismm, char *error, size_t maxlen, bool
 	g_playerManager = new CPlayerManager();
 	g_pAdminSystem = new CAdminSystem();
 
+	coaches.Purge();
+
 	// Steam authentication
 	new CTimer(1.0f, true, true, []()
 	{
@@ -287,6 +289,10 @@ void CS2Scrim::Hook_StartupServer(const GameSessionConfiguration_t& config, ISou
 
 	if(g_bHasTicked)
 		RemoveMapTimers();
+	
+	FOR_EACH_VEC(coaches,i){
+		coaches.Remove(i);
+	}
 
 	g_bHasTicked = false;
 	gpGlobals = GetGameGlobals();
