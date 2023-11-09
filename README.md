@@ -52,6 +52,7 @@ This plugin adds the minimum requirements for competitive teams that need a more
   - [X] gotv .record
     - [X] include date and time
     - [ ] include map name
+  - [ ] Damage print on round-end
 - Practice
   - Maps
     - [X] Map
@@ -60,9 +61,19 @@ This plugin adds the minimum requirements for competitive teams that need a more
   - Utility
     - [ ] Remove smokes
     - [ ] Rethrow
+    - [ ] Throw information (air-time, bounces...)
+    - [ ] Save throws and lineups
   - Misc
     - [ ] Move to spec
     - [ ] Noclip
+    - [ ] No flash effect
+    - [ ] Create a "menu" workaround, using shoot and reload feedback for example, to confirm or cancel
+  - BOTs management
+      - [ ] Place
+      - [ ] Boost
+      - [ ] Util and damage feedback
+
+> I'll try to documentate everything as better as possible, feel free to leave suggestions!
 
 ## Compilation
 
