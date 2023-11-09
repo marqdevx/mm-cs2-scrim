@@ -34,6 +34,16 @@ This plugin adds the minimum requirements for competitive teams that need a more
 * Practice commands  
     `.spawn`: move to the desired competitive spawn i.e `.spawn 2`  
 
+* Leveraged from [CS2Fixes](https://github.com/Source2ZE/CS2Fixes/)
+  `c_reload_admins`: console command to reload admins.cfg  
+  `.ban <player> <duration/0 (permanent)>`: ban a player  
+  `.unban <player>`: remove ban of player  
+  `.kick <player>`: kick a player out of the server  
+  `.gag <player> <duration>`: forbids chat to player  
+  `.ungag <player>`: allow back a player that was gagged to chat  
+  `.slay <player>`: kills a player  
+  `.noclip`: toggles noclip to current player (practice mode)  
+
 ## Roadmap
 - Scrim
   - [X] Pauses
