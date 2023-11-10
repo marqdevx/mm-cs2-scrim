@@ -65,7 +65,7 @@ This plugin adds the minimum requirements for competitive teams that need a more
     - [ ] Save throws and lineups
   - Misc
     - [ ] Move to spec
-    - [ ] Noclip
+    - [X] Noclip
     - [ ] No flash effect
     - [ ] Create a "menu" workaround, using shoot and reload feedback for example, to confirm or cancel
   - BOTs management
