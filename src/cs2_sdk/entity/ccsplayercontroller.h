@@ -33,6 +33,9 @@ public:
 	SCHEMA_FIELD(CCSPlayerController_InGameMoneyServices*, m_pInGameMoneyServices)
 	SCHEMA_FIELD(CCSPlayerController_ActionTrackingServices*, m_pActionTrackingServices)
 	SCHEMA_FIELD(CUtlSymbolLarge, m_szClan)
+	SCHEMA_FIELD(uint32_t , m_iPing)
+	SCHEMA_FIELD(bool , m_bInBombZone)
+	
 
 	static CCSPlayerController* FromPawn(CCSPlayerPawn* pawn) { return (CCSPlayerController*)pawn->m_hController().Get(); }
 
