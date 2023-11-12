@@ -9,6 +9,11 @@ Thanks for the work!
 DISCLAIMER: *not* responsible for any issues or breakages caused by the plugin. 
 ```
 
+### Fix server crashes
+In case you have non-expected server crashes, it might be due the `addons\cs2scrim\gamedata\cs2fixes.games.txt` is not up-to-date.
+I might not update that text until a next "official" release of the addon, so in order to fix that file:
+The original addon repository it's actively updated, so copy the content of this https://github.com/Source2ZE/CS2Fixes/blob/main/gamedata/cs2fixes.games.txt onto your `addons\cs2scrim\gamedata\cs2fixes.games.txt`
+
 # Addon information
 This plugin adds the minimum requirements for competitive teams that need a more handy way of managing a few commands from the server side, like config management or replay recording.
 
