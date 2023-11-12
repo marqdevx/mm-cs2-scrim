@@ -39,7 +39,7 @@ This plugin adds the minimum requirements for competitive teams that need a more
 * Practice commands  
     `.spawn`: move to the desired competitive spawn i.e `.spawn 2`  
 
-* Leveraged from [CS2Fixes](https://github.com/Source2ZE/CS2Fixes/)
+* Leveraged from [CS2Fixes](https://github.com/Source2ZE/CS2Fixes/)  
   `c_reload_admins`: console command to reload admins.cfg  
   `.ban <player> <duration/0 (permanent)>`: ban a player  
   `.unban <player>`: remove ban of player  
