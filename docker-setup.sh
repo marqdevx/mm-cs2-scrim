@@ -25,7 +25,8 @@ cd "/dockerVolume/mm-cs2-scrim"
 mkdir build
 cd build
 
-python ../configure.py --enable-optimize --symbol-files --sdks cs2
+#python ../configure.py --enable-optimize --symbol-files --sdks cs2
+python3 ../configure.py --sdks cs2 --targets x86_64
 ambuild
 
 
