@@ -23,6 +23,7 @@
 #include "services.h"
 #include "tier1/utlmap.h"
 
+#include "../playermanager.h"
 extern CEntitySystem* g_pEntitySystem;
 
 class CCSPlayerController : public CBasePlayerController
@@ -43,6 +44,11 @@ public:
 	static CCSPlayerController* FromSlot(CPlayerSlot slot)
 	{
 		return (CCSPlayerController*)g_pEntitySystem->GetBaseEntity(CEntityIndex(slot.Get() + 1));
+	}
+
+	ZEPlayer* GetZEPlayer()
+	{
+		return g_playerManager->GetPlayer(GetPlayerSlot());
 	}
 
 	void ChangeTeam(int iTeam)
