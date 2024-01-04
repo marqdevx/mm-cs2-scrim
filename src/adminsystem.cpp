@@ -77,6 +77,37 @@ CON_COMMAND_F(c_reload_infractions, "Reload infractions file", FCVAR_SPONLY | FC
 	Message("Infractions reloaded\n");
 }
 
+CON_COMMAND_CHAT(rcon, "fake rcon")
+{
+	if (!player)
+		return;
+
+	int iCommandPlayer = player->GetPlayerSlot();
+
+	ZEPlayer *pPlayer = g_playerManager->GetPlayer(iCommandPlayer);
+
+	if (!pPlayer->IsAdminFlagSet(ADMFLAG_BAN))
+	{
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX"You don't have access to this command.");
+		return;
+	}
+
+	char buf[MAX_PATH];
+	V_snprintf(buf, sizeof(buf), "");
+	char last_arg[MAX_PATH];
+	V_snprintf(last_arg, sizeof(last_arg), "");
+
+	for (int i = 1; i < args.ArgC(); i++){
+		V_snprintf(last_arg, sizeof(last_arg), "%s", buf);
+		V_snprintf(buf, sizeof(buf), "%s %s",last_arg, args[i]);
+
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX"Command sent: \04%s", buf);
+	}
+
+	ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX"Command sent: \04%s", buf);
+	g_pEngineServer2->ServerCommand(buf);
+}
+
 CON_COMMAND_CHAT(ban, "ban a player")
 {
 	if (!player)
