@@ -79,23 +79,41 @@ GAME_EVENT_F(player_team)
 	}
 }
 
-GAME_EVENT_F(round_start)
+GAME_EVENT_F(round_prestart)
 {
 	if (coaches.Count() < 1) return;
 	
 	FOR_EACH_VEC(coaches,i){
 		CCSPlayerController *pTarget = (CCSPlayerController *)g_pEntitySystem->GetBaseEntity((CEntityIndex)(coaches[i]->GetPlayerSlot() + 1));
-
+		
 		if(!pTarget) return;	//avoid crash if coach is not connected
 
-		coaches[i]->m_pInGameMoneyServices->m_iAccount = 0;
+		CHandle<CCSPlayerController> hController = pTarget->GetHandle();
 
-		coaches[i]->GetPawn()->CommitSuicide(false, true);
+		int currentTeam = pTarget->m_iTeamNum;
+
+		pTarget->ChangeTeam(CS_TEAM_SPECTATOR);
+
+		new CTimer(0.1f, false, false, [hController, currentTeam]()
+		{
+
+			CCSPlayerController *pController = hController.Get();
+
+			if(!pController) return;	//avoid crash if coach is not connected
+
+			pController->m_pInGameMoneyServices->m_iAccount = 0;
+
+			pController->GetPawn()->CommitSuicide(false, true);
+			
+			pController->m_pActionTrackingServices->m_matchStats().m_iKills = 0;
+			pController->m_pActionTrackingServices->m_matchStats().m_iDeaths = 0;
+			pController->m_pActionTrackingServices->m_matchStats().m_iAssists = 0;
+			pController->m_pActionTrackingServices->m_matchStats().m_iDamage = 0;
+			
+			pController->ChangeTeam(currentTeam);
 		
-		coaches[i]->m_pActionTrackingServices->m_matchStats().m_iKills = 0;
-		coaches[i]->m_pActionTrackingServices->m_matchStats().m_iDeaths = 0;
-		coaches[i]->m_pActionTrackingServices->m_matchStats().m_iAssists = 0;
-		coaches[i]->m_pActionTrackingServices->m_matchStats().m_iDamage = 0;
+			return;
+		});
 	}
 }
 
