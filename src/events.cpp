@@ -36,6 +36,8 @@ CUtlVector<CGameEventListener *> g_vecEventListeners;
 extern CUtlVector <CCSPlayerController*> coaches;
 extern bool practiceMode;
 extern bool no_flash_mode;
+bool half_last_round = false;
+bool swapped_teams = false;
 
 void RegisterEventListeners()
 {
@@ -79,6 +81,14 @@ GAME_EVENT_F(player_team)
 	}
 }
 
+GAME_EVENT_F(player_death){
+	//TODO: hide only coach death notice
+}
+
+GAME_EVENT_F(round_announce_last_round_half){
+	half_last_round = true;
+}
+
 GAME_EVENT_F(round_prestart)
 {
 	if (coaches.Count() < 1) return;
@@ -87,35 +97,71 @@ GAME_EVENT_F(round_prestart)
 		CCSPlayerController *pTarget = (CCSPlayerController *)g_pEntitySystem->GetBaseEntity((CEntityIndex)(coaches[i]->GetPlayerSlot() + 1));
 		
 		if(!pTarget) return;	//avoid crash if coach is not connected
-
-		CHandle<CCSPlayerController> hController = pTarget->GetHandle();
+		//ClientPrint(pTarget, HUD_PRINTTALK, "coach slot  side %i", coaches[i]->m_iTeamNum());
 
 		int currentTeam = pTarget->m_iTeamNum;
+		int newTeam = CS_TEAM_SPECTATOR;
 
 		pTarget->ChangeTeam(CS_TEAM_SPECTATOR);
 
-		new CTimer(0.1f, false, false, [hController, currentTeam]()
-		{
+		//pTarget->GetPawn()->CommitSuicide(false, true);
 
+		if(half_last_round && !swapped_teams){
+			if(currentTeam == CS_TEAM_CT){
+				newTeam = CS_TEAM_T;
+			}else{
+				newTeam = CS_TEAM_CT;
+			}
+		}else{
+				newTeam = currentTeam;
+		}
+		
+		CHandle<CCSPlayerController> hController = pTarget->GetHandle();
+
+		new CTimer(0.15f, false, false, [hController, newTeam]()
+		{
 			CCSPlayerController *pController = hController.Get();
 
 			if(!pController) return;	//avoid crash if coach is not connected
 
 			pController->m_pInGameMoneyServices->m_iAccount = 0;
 
-			pController->GetPawn()->CommitSuicide(false, true);
-			
-			pController->m_pActionTrackingServices->m_matchStats().m_iKills = 0;
-			pController->m_pActionTrackingServices->m_matchStats().m_iDeaths = 0;
-			pController->m_pActionTrackingServices->m_matchStats().m_iAssists = 0;
-			pController->m_pActionTrackingServices->m_matchStats().m_iDamage = 0;
-			
-			pController->ChangeTeam(currentTeam);
-		
+			pController->ChangeTeam(newTeam);
+
+			new CTimer(0.0f, false, false, [hController, newTeam]()
+			{
+				CCSPlayerController *pController = hController.Get();
+				if(!pController) return;	//avoid crash if coach is not connected
+				pController->GetPawn()->CommitSuicide(false, true);
+				pController->m_pActionTrackingServices->m_matchStats().m_iDeaths = 0;
+				return;
+			});
+
 			return;
 		});
+		
+		if(half_last_round) half_last_round = false;
 	}
 }
+
+GAME_EVENT_F(round_start)
+{
+	if (coaches.Count() < 1) return;
+	
+	FOR_EACH_VEC(coaches,i){
+		CCSPlayerController *pTarget = (CCSPlayerController *)g_pEntitySystem->GetBaseEntity((CEntityIndex)(coaches[i]->GetPlayerSlot() + 1));
+
+		coaches[i]->m_pInGameMoneyServices->m_iAccount = 0;
+
+		coaches[i]->GetPawn()->CommitSuicide(false, true);
+		
+		coaches[i]->m_pActionTrackingServices->m_matchStats().m_iKills = 0;
+		coaches[i]->m_pActionTrackingServices->m_matchStats().m_iDeaths = 0;
+		coaches[i]->m_pActionTrackingServices->m_matchStats().m_iAssists = 0;
+		coaches[i]->m_pActionTrackingServices->m_matchStats().m_iDamage = 0;
+	}
+}
+
 
 GAME_EVENT_F(round_freeze_end)
 {
