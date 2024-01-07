@@ -341,7 +341,7 @@ CON_COMMAND_CHAT(ct, "Switch to CT side")
 	if (!player)
 		return;
 
-	if (!practiceMode)
+	if (!practiceMode && player->m_iTeamNum != CS_TEAM_SPECTATOR)
 	{
 		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "Switch teams only available on .pracc mode");
 		return;
@@ -355,7 +355,7 @@ CON_COMMAND_CHAT(t, "Switch to T side")
 	if (!player)
 		return;
 
-	if (!practiceMode)
+	if (!practiceMode && player->m_iTeamNum != CS_TEAM_SPECTATOR)
 	{
 		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "Switch teams only available on .pracc mode");
 		return;
