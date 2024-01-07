@@ -38,6 +38,7 @@ bool practiceMode = false;
 bool no_flash_mode = false;
 extern CUtlVector <CCSPlayerController*> coaches;
 extern void print_coaches();
+extern bool half_last_round;
 char level_name[256];	//Map name workaround for demo names, only when .map has been triggered
 
 #define ADMIN_PREFIX "Admin %s has "
@@ -101,8 +102,6 @@ CON_COMMAND_CHAT(rcon, "fake rcon")
 	for (int i = 1; i < args.ArgC(); i++){
 		V_snprintf(last_arg, sizeof(last_arg), "%s", buf);
 		V_snprintf(buf, sizeof(buf), "%s %s",last_arg, args[i]);
-
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX"Command sent: \04%s", buf);
 	}
 
 	ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX"Command sent: \04%s", buf);
@@ -1078,7 +1077,7 @@ CON_COMMAND_CHAT(restore, "Restore round")
 {
 	if (!player)
 		return;
-
+		
 	int iCommandPlayer = player->GetPlayerSlot();
 
 	ZEPlayer *pPlayer = g_playerManager->GetPlayer(player->GetPlayerSlot());
@@ -1113,6 +1112,8 @@ CON_COMMAND_CHAT(restore, "Restore round")
 	V_snprintf(buf, MAX_PATH, "mp_backup_restore_load_file %s", aux);
 
 	ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX"\4Restored round \3%i", nRounds);
+
+	half_last_round = false; //If not set to false, coach will be on the wrong team if it is the last round of the first half
 
 	g_pEngineServer2->ServerCommand(buf);
 }
