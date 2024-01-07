@@ -38,6 +38,7 @@ bool practiceMode = false;
 bool no_flash_mode = false;
 extern CUtlVector <CCSPlayerController*> coaches;
 extern void print_coaches();
+char level_name[256];	//Map name workaround for demo names, only when .map has been triggered
 
 #define ADMIN_PREFIX "Admin %s has "
 
@@ -1058,6 +1059,8 @@ CON_COMMAND_CHAT(map, "change map")
 		return;
 	}
 */
+	V_snprintf(level_name, sizeof(level_name), "%s", args[1]);
+
 	char buf[MAX_PATH];
 	V_snprintf(buf, sizeof(buf), "changelevel de_%s", args[1]);
 
@@ -1140,6 +1143,7 @@ CON_COMMAND_CHAT(record, "Record demo")
 	std::strftime(actualTime, sizeof(actualTime), "%d%B_%H-%M", std::localtime(&result));
 
 	V_snprintf(actualMap,MAX_PATH, "unknownMap");
+	if(level_name != "")V_snprintf(actualMap,MAX_PATH, "%s", level_name);
 	V_snprintf(demoName, MAX_PATH, "%s_%s", actualTime, actualMap);
 
 	V_snprintf(buf, MAX_PATH, "tv_record gotv/%s", demoName);
