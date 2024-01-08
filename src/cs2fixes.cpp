@@ -100,6 +100,7 @@ SH_DECL_HOOK8_void(IGameEventSystem, PostEventAbstract, SH_NOATTRIB, 0, CSplitSc
 SH_DECL_HOOK3_void(INetworkServerService, StartupServer, SH_NOATTRIB, 0, const GameSessionConfiguration_t&, ISource2WorldSession*, const char*);
 SH_DECL_HOOK6_void(ISource2GameEntities, CheckTransmit, SH_NOATTRIB, 0, CCheckTransmitInfo **, int, CBitVec<16384> &, const Entity2Networkable_t **, const uint16 *, int);
 SH_DECL_HOOK2_void(IServerGameClients, ClientCommand, SH_NOATTRIB, 0, CPlayerSlot, const CCommand &);
+SH_DECL_HOOK3_void(ICvar, DispatchConCommand, SH_NOATTRIB, 0, ConCommandHandle, const CCommandContext&, const CCommand&);
 
 CS2Scrim g_CS2Scrim;
 
@@ -114,11 +115,6 @@ CGlobalVars *GetGameGlobals()
 
 	return server->GetGlobals();
 }
-
-#if 0
-// Currently unavailable, requires hl2sdk work!
-ConVar sample_cvar("sample_cvar", "42", 0);
-#endif
 
 CON_COMMAND_F(sample_command, "Sample command", FCVAR_SPONLY | FCVAR_LINKED_CONCOMMAND)
 {
@@ -169,6 +165,7 @@ bool CS2Scrim::Load(PluginId id, ISmmAPI *ismm, char *error, size_t maxlen, bool
 	SH_ADD_HOOK_MEMFUNC(IGameEventSystem, PostEventAbstract, g_gameEventSystem, this, &CS2Scrim::Hook_PostEvent, false);
 	SH_ADD_HOOK_MEMFUNC(INetworkServerService, StartupServer, g_pNetworkServerService, this, &CS2Scrim::Hook_StartupServer, true);
 	SH_ADD_HOOK_MEMFUNC(ISource2GameEntities, CheckTransmit, g_pSource2GameEntities, this, &CS2Scrim::Hook_CheckTransmit, true);
+	SH_ADD_HOOK_MEMFUNC(ICvar, DispatchConCommand, g_pCVar, this, &CS2Scrim::Hook_DispatchConCommand, false);
 
 	META_CONPRINTF( "All hooks started!\n" );
 
@@ -261,7 +258,8 @@ bool CS2Scrim::Unload(char *error, size_t maxlen)
 	SH_REMOVE_HOOK_MEMFUNC(IGameEventSystem, PostEventAbstract, g_gameEventSystem, this, &CS2Scrim::Hook_PostEvent, false);
 	SH_REMOVE_HOOK_MEMFUNC(INetworkServerService, StartupServer, g_pNetworkServerService, this, &CS2Scrim::Hook_StartupServer, true);
 	SH_REMOVE_HOOK_MEMFUNC(ISource2GameEntities, CheckTransmit, g_pSource2GameEntities, this, &CS2Scrim::Hook_CheckTransmit, true);
-
+	SH_REMOVE_HOOK_MEMFUNC(ICvar, DispatchConCommand, g_pCVar, this, &CS2Scrim::Hook_DispatchConCommand, false);
+	
 	ConVar_Unregister();
 
 	g_CommandList.Purge();
@@ -281,6 +279,77 @@ bool CS2Scrim::Unload(char *error, size_t maxlen)
 		delete g_GameConfig;
 
 	return true;
+}
+void CS2Scrim::Hook_DispatchConCommand(ConCommandHandle cmdHandle, const CCommandContext& ctx, const CCommand& args)
+{
+	if (!g_pEntitySystem)
+		return;
+
+	auto slot = ctx.GetPlayerSlot();
+
+	bool isSay = !V_strcmp(args.Arg(0), "say");
+	bool isTeamSay = !V_strcmp(args.Arg(0), "say_team");
+
+	if (slot != -1 && (isSay || isTeamSay))
+	{
+		auto pController = CCSPlayerController::FromSlot(slot);
+		bool bGagged = pController && pController->GetZEPlayer()->IsGagged();
+		bool bAdminChat = isTeamSay && *args[1] == '@';
+		bool bSilent = *args[1] == '/' || (isTeamSay && *args[1] == '@');
+		bool bCommand = *args[1] == '!' || *args[1] == '/' || *args[1] == '.';
+
+		// Chat messages should generate events regardless
+		if (pController)
+		{
+			IGameEvent *pEvent = g_gameEventManager->CreateEvent("player_chat");
+
+			if (pEvent)
+			{
+				pEvent->SetBool("teamonly", isTeamSay);
+				pEvent->SetInt("userid", pController->GetPlayerSlot());
+				pEvent->SetString("text", args[1]);
+
+				g_gameEventManager->FireEvent(pEvent, true);
+			}
+		}
+
+		if (!bGagged && !bSilent)
+		{
+			SH_CALL(g_pCVar, &ICvar::DispatchConCommand)(cmdHandle, ctx, args);
+		}
+		else if (bAdminChat) // Admin chat can be sent by anyone but only seen by admins, use flood protection here too
+		{
+			// HACK: At this point, we can safely modify the arg buffer as it won't be passed anywhere else
+			// The string here is originally ("@foo bar"), trim it to be (foo bar)
+			char *pszMessage = (char*)(args.ArgS() + 2);
+			pszMessage[V_strlen(pszMessage) - 1] = 0;
+
+			for (int i = 0; i < gpGlobals->maxClients; i++)
+			{
+				ZEPlayer *pPlayer = g_playerManager->GetPlayer(i);
+
+				if (!pPlayer || !pPlayer->IsAdminFlagSet(ADMFLAG_GENERIC))
+					continue;
+
+				ClientPrint(CCSPlayerController::FromSlot(i), HUD_PRINTTALK, " \4(ADMINS) %s:\1 %s", pController->GetPlayerName(), pszMessage);
+			}
+		}
+
+		// Finally, run the chat command if it is one, so anything will print after the player's message
+		if (bCommand)
+		{
+			// Do the same trimming as with admin chat
+			char *pszMessage = (char *)(args.ArgS() + 2);
+
+			// Host_Say at some point removes the trailing " for whatever reason, so we only remove if it was never called
+			if (bSilent)
+				pszMessage[V_strlen(pszMessage) - 1] = 0;
+
+			ParseChatCommand(pszMessage, pController);
+		}
+
+		RETURN_META(MRES_SUPERCEDE);
+	}
 }
 
 void CS2Scrim::Hook_StartupServer(const GameSessionConfiguration_t& config, ISource2WorldSession*, const char*)
@@ -315,29 +384,7 @@ void CS2Scrim::Hook_PostEvent(CSplitScreenSlot nSlot, bool bLocalOnly, int nClie
 
 	NetMessageInfo_t* info = pEvent->GetNetMessageInfo();
 
-	//CMsgTEFireBullets
-	if (info->m_MessageId == GE_FireBulletsId || info->m_MessageId == TE_WorldDecalId)
-	{
-		// Can later do a bit mask for players using stopsound but this will do for now
-		for (uint64 i = 0; i < MAXPLAYERS; i++)
-		{
-			ZEPlayer *pPlayer = g_playerManager->GetPlayer(i);
-
-			// A client might be already excluded from the event possibly due to being too far away, so ignore them
-			if (!(*(uint64 *)clients & ((uint64)1 << i)))
-				continue;
-
-			if (!pPlayer)
-				continue;
-
-			if ((info->m_MessageId == GE_FireBulletsId && pPlayer->IsUsingStopSound()) || 
-				(info->m_MessageId == TE_WorldDecalId && pPlayer->IsUsingStopDecals()))
-			{
-				*(uint64*)clients &= ~((uint64)1 << i);
-				nClientCount--;
-			}
-		}
-	}
+	
 }
 
 void CS2Scrim::AllPluginsLoaded()
@@ -532,7 +579,7 @@ const char *CS2Scrim::GetLicense()
 
 const char *CS2Scrim::GetVersion()
 {
-	return "1.0.2.0";
+	return "1.0.3.0-beta";
 }
 
 const char *CS2Scrim::GetDate()

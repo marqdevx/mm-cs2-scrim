@@ -23,6 +23,7 @@
 #include "services.h"
 #include "tier1/utlmap.h"
 
+#include "../playermanager.h"
 extern CEntitySystem* g_pEntitySystem;
 
 class CCSPlayerController : public CBasePlayerController
@@ -33,6 +34,9 @@ public:
 	SCHEMA_FIELD(CCSPlayerController_InGameMoneyServices*, m_pInGameMoneyServices)
 	SCHEMA_FIELD(CCSPlayerController_ActionTrackingServices*, m_pActionTrackingServices)
 	SCHEMA_FIELD(CUtlSymbolLarge, m_szClan)
+	SCHEMA_FIELD(uint32_t , m_iPing)
+	SCHEMA_FIELD(bool , m_bInBombZone)
+	
 
 	static CCSPlayerController* FromPawn(CCSPlayerPawn* pawn) { return (CCSPlayerController*)pawn->m_hController().Get(); }
 
@@ -40,6 +44,11 @@ public:
 	static CCSPlayerController* FromSlot(CPlayerSlot slot)
 	{
 		return (CCSPlayerController*)g_pEntitySystem->GetBaseEntity(CEntityIndex(slot.Get() + 1));
+	}
+
+	ZEPlayer* GetZEPlayer()
+	{
+		return g_playerManager->GetPlayer(GetPlayerSlot());
 	}
 
 	void ChangeTeam(int iTeam)

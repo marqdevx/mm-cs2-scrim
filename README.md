@@ -94,3 +94,8 @@ Set up video: https://www.youtube.com/watch?v=thk78MDsQnc
 ## Authors from the [original repository](https://github.com/Source2ZE/CS2Fixes/)
 - [@xen-000](https://github.com/xen-000)
 - [@poggicek](https://github.com/poggicek)
+
+## Credits
+Almost all of the features are originally from the CS:GO plugin https://github.com/splewis/csgo-practice-mode, using it as reference. Thanks @splewis! (hope to see your work on CS2)
+
+For example the spawn workaround to get the competitive one, is checking the priority value of the spawns.

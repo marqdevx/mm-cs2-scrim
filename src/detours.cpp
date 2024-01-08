@@ -41,7 +41,6 @@ extern CGlobalVars *gpGlobals;
 extern CEntitySystem *g_pEntitySystem;
 extern IGameEventManager2 *g_gameEventManager;
 
-DECLARE_DETOUR(Host_Say, Detour_Host_Say);
 DECLARE_DETOUR(UTIL_SayTextFilter, Detour_UTIL_SayTextFilter);
 DECLARE_DETOUR(UTIL_SayText2Filter, Detour_UTIL_SayText2Filter);
 DECLARE_DETOUR(IsHearingClient, Detour_IsHearingClient);
@@ -179,33 +178,6 @@ void FASTCALL Detour_UTIL_SayText2Filter(
 	UTIL_SayText2Filter(filter, pEntity, eMessageType, msg_name, param1, param2, param3, param4);
 }
 
-void FASTCALL Detour_Host_Say(CCSPlayerController *pController, CCommand &args, bool teamonly, int unk1, const char *unk2)
-{
-	bool bGagged = pController && g_playerManager->GetPlayer(pController->GetPlayerSlot())->IsGagged();
-
-	if (!bGagged && *args[1] != '/')
-	{
-		Host_Say(pController, args, teamonly, unk1, unk2);
-
-		if (pController)
-		{
-			IGameEvent *pEvent = g_gameEventManager->CreateEvent("player_chat");
-
-			if (pEvent)
-			{
-				pEvent->SetBool("teamonly", teamonly);
-				pEvent->SetInt("userid", pController->entindex());
-				pEvent->SetString("text", args[1]);
-
-				g_gameEventManager->FireEvent(pEvent, true);
-			}
-		}
-	}
-
-	if (*args[1] == '!' || *args[1] == '/' || *args[1] == '.')
-		ParseChatCommand(args[1], pController);
-}
-
 void Detour_Log()
 {
 	return;
@@ -276,9 +248,6 @@ bool InitDetours(CGameConfig *gameConfig)
 		success = false;
 	UTIL_SayText2Filter.EnableDetour();
 
-	if (!Host_Say.CreateDetour(gameConfig))
-		success = false;
-	Host_Say.EnableDetour();
 
 	if (!IsHearingClient.CreateDetour(gameConfig))
 		success = false;

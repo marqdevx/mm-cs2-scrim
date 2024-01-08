@@ -23,6 +23,7 @@
 #include "ctimer.h"
 #include "eventlistener.h"
 #include "entity/cbaseplayercontroller.h"
+#include "entity/ccsplayerpawnbase.h"
 
 #include "tier0/memdbgon.h"
 
@@ -31,6 +32,12 @@ extern IServerGameClients *g_pSource2GameClients;
 extern CEntitySystem *g_pEntitySystem;
 
 CUtlVector<CGameEventListener *> g_vecEventListeners;
+
+extern CUtlVector <CCSPlayerController*> coaches;
+extern bool practiceMode;
+extern bool no_flash_mode;
+bool half_last_round = false;
+bool swapped_teams = false;
 
 void RegisterEventListeners()
 {
@@ -64,13 +71,78 @@ CON_COMMAND_F(c_toggle_team_messages, "toggle team messages", FCVAR_SPONLY | FCV
 }
 
 GAME_EVENT_F(player_team)
-{
-	// Remove chat message for team changes
-	if (g_bBlockTeamMessages)
-		pEvent->SetBool("silent", true);
+{	
+	CCSPlayerController* pController = (CCSPlayerController *)g_pEntitySystem->GetBaseEntity((CEntityIndex)(pEvent->GetUint64("userid") + 1));
+	
+	if (coaches.Count() < 1) return;
+	FOR_EACH_VEC(coaches,i){
+		if(pController->GetPlayerSlot() == coaches[i]->GetPlayerSlot()) pEvent->SetBool("silent", true); return;
+		//ClientPrint(pController, HUD_PRINTTALK, "coach slot %i", coaches[i]->GetPlayerSlot());
+	}
 }
 
-extern CUtlVector <CCSPlayerController*> coaches;
+GAME_EVENT_F(player_death){
+	//TODO: hide only coach death notice
+}
+
+GAME_EVENT_F(round_announce_last_round_half){
+	half_last_round = true;
+}
+
+GAME_EVENT_F(round_prestart)
+{
+	if (coaches.Count() < 1) return;
+	
+	FOR_EACH_VEC(coaches,i){
+		CCSPlayerController *pTarget = (CCSPlayerController *)g_pEntitySystem->GetBaseEntity((CEntityIndex)(coaches[i]->GetPlayerSlot() + 1));
+		
+		if(!pTarget) return;	//avoid crash if coach is not connected
+		//ClientPrint(pTarget, HUD_PRINTTALK, "coach slot  side %i", coaches[i]->m_iTeamNum());
+
+		int currentTeam = pTarget->m_iTeamNum;
+		int newTeam = CS_TEAM_SPECTATOR;
+
+		pTarget->ChangeTeam(CS_TEAM_SPECTATOR);
+
+		//pTarget->GetPawn()->CommitSuicide(false, true);
+
+		if(half_last_round && !swapped_teams){
+			if(currentTeam == CS_TEAM_CT){
+				newTeam = CS_TEAM_T;
+			}else{
+				newTeam = CS_TEAM_CT;
+			}
+		}else{
+				newTeam = currentTeam;
+		}
+		
+		CHandle<CCSPlayerController> hController = pTarget->GetHandle();
+
+		new CTimer(0.15f, false, false, [hController, newTeam]()
+		{
+			CCSPlayerController *pController = hController.Get();
+
+			if(!pController) return;	//avoid crash if coach is not connected
+
+			pController->m_pInGameMoneyServices->m_iAccount = 0;
+
+			pController->ChangeTeam(newTeam);
+
+			new CTimer(0.0f, false, false, [hController, newTeam]()
+			{
+				CCSPlayerController *pController = hController.Get();
+				if(!pController) return;	//avoid crash if coach is not connected
+				pController->GetPawn()->CommitSuicide(false, true);
+				pController->m_pActionTrackingServices->m_matchStats().m_iDeaths = 0;
+				return;
+			});
+
+			return;
+		});
+		
+		if(half_last_round) half_last_round = false;
+	}
+}
 
 GAME_EVENT_F(round_start)
 {
@@ -90,6 +162,7 @@ GAME_EVENT_F(round_start)
 	}
 }
 
+
 GAME_EVENT_F(round_freeze_end)
 {
 	if (coaches.Count() < 1) return;
@@ -97,11 +170,15 @@ GAME_EVENT_F(round_freeze_end)
 	FOR_EACH_VEC(coaches,i){
 		CCSPlayerController *pTarget = (CCSPlayerController *)g_pEntitySystem->GetBaseEntity((CEntityIndex)(coaches[i]->GetPlayerSlot() + 1));
 		
+		if(!pTarget) return;	//avoid crash if coach is not connected
+
 		CHandle<CCSPlayerController> hController = pTarget->GetHandle();
 		
 		new CTimer(2.0f, false, false, [hController]()
 		{
 			CCSPlayerController *pController = hController.Get();
+
+			if(!pController) return;	//avoid crash if coach is not connected
 
 			int currentTeam = pController->m_iTeamNum;
 			pController->ChangeTeam(CS_TEAM_SPECTATOR);
@@ -110,4 +187,38 @@ GAME_EVENT_F(round_freeze_end)
 			return;
 		});
 	}
+}
+
+GAME_EVENT_F(player_hurt){
+	if(!practiceMode) return;
+
+	CCSPlayerController* pController = (CCSPlayerController *)g_pEntitySystem->GetBaseEntity((CEntityIndex)(pEvent->GetUint64("attacker") + 1));
+	
+	if (!pController)
+		return;
+
+	CCSPlayerController* pHurt = (CCSPlayerController *)g_pEntitySystem->GetBaseEntity((CEntityIndex)(pEvent->GetUint64("userid") + 1));
+	//ClientPrintAll(HUD_PRINTTALK, "Smoke end %i", pEvent->GetUint64("entityid"));
+	int damage = pEvent->GetFloat("dmg_health");
+	int actualHealth = pEvent->GetFloat("health");
+	ClientPrint(pController, HUD_PRINTTALK, CHAT_PREFIX "Damage done \04%d \01to \04%s\1[\04%d\01]", damage , pHurt->GetPlayerName(), actualHealth);
+	
+}
+
+GAME_EVENT_F(player_blind){
+	if(!practiceMode) return;
+
+	CBasePlayerController *pTarget = (CBasePlayerController *)g_pEntitySystem->GetBaseEntity((CEntityIndex)(pEvent->GetUint64("userid") + 1));
+	CCSPlayerController* pController = (CCSPlayerController *)g_pEntitySystem->GetBaseEntity((CEntityIndex)(pEvent->GetUint64("userid") + 1));
+	CCSPlayerController* pAttacker = (CCSPlayerController *)g_pEntitySystem->GetBaseEntity((CEntityIndex)(pEvent->GetUint64("attacker") + 1));
+	CBasePlayerController* pAttackerBase = (CCSPlayerController *)g_pEntitySystem->GetBaseEntity((CEntityIndex)(pEvent->GetUint64("attacker") + 1));
+	CCSPlayerController* pPlayer = (CCSPlayerController *)g_pEntitySystem->GetBaseEntity((CEntityIndex)(pEvent->GetUint64("userid") + 1));
+	CCSPlayerPawnBase* cPlayerBase = (CCSPlayerPawnBase*)pPlayer->GetPawn();
+
+	ClientPrint(pAttacker, HUD_PRINTTALK, CHAT_PREFIX "Flashed \04%s\1 for \x04%f\1 s", pTarget->GetPlayerName(), pEvent->GetFloat("blind_duration"));
+
+	if(no_flash_mode) cPlayerBase->m_flFlashMaxAlpha = 2;
+
+	if(pAttacker->GetPlayerSlot() == pController->GetPlayerSlot()) return;
+	ClientPrint(pController, HUD_PRINTTALK, CHAT_PREFIX "Flashed by \04%s\1, for \x04%f\1 s", pAttacker->GetPlayerName(), pEvent->GetFloat("blind_duration"));
 }

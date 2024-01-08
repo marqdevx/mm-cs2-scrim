@@ -25,8 +25,10 @@
 #include "utils/entity.h"
 #include "entity/cbaseentity.h"
 #include "entity/ccsweaponbase.h"
-#include "entity/ccsplayercontroller.h"
 #include "entity/ccsplayerpawn.h"
+#include "entity/ccsplayercontroller.h"
+#include "entity/ccsplayerpawnbase.h"
+
 #include "entity/cbasemodelentity.h"
 #include "playermanager.h"
 #include "adminsystem.h"
@@ -40,6 +42,7 @@ extern int g_targetPawn;
 extern int g_targetController;
 
 extern bool practiceMode;
+extern bool no_flash_mode;
 
 void ParseChatCommand(const char *pMessage, CCSPlayerController *pController)
 {
@@ -47,7 +50,7 @@ void ParseChatCommand(const char *pMessage, CCSPlayerController *pController)
 		return;
 
 	CCommand args;
-	args.Tokenize(pMessage + 1);
+	args.Tokenize(pMessage);
 
 	uint16 index = g_CommandList.Find(hash_32_fnv1a_const(args[0]));
 
@@ -94,6 +97,39 @@ CON_COMMAND_CHAT(myuid, "test")
 	ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "Your userid is %i, slot: %i, retrieved slot: %i", g_pEngineServer2->GetPlayerUserId(iPlayer).Get(), iPlayer, g_playerManager->GetSlotFromUserId(g_pEngineServer2->GetPlayerUserId(iPlayer).Get()));
 }
 
+
+CON_COMMAND_CHAT(noflash, "noflash"){
+
+	no_flash_mode = !no_flash_mode;
+
+	if (!player)
+		return;
+	
+	ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "Flash mode set to \04%i", no_flash_mode);
+}
+
+CON_COMMAND_CHAT(test, "test")
+{
+	if (!player)
+		return;
+
+
+	//CBasePlayerPawn *pPawn = player->m_hPawn();
+	//pPawn->m_flFlashMaxAlpha() = 0.5f;
+//	player->GetPawn()->m_flFlashMaxAlpha = 0.5f;
+
+	CCSPlayerController* pPlayer = (CCSPlayerController *)g_pEntitySystem->GetBaseEntity((CEntityIndex)(player->GetPlayerSlot()+1));
+	
+	CCSPlayerPawnBase* cPlayerBase = (CCSPlayerPawnBase*)pPlayer->GetPawn();
+	
+	
+	cPlayerBase->m_flFlashMaxAlpha = 2;
+	ClientPrint(pPlayer, HUD_PRINTTALK, "test %i flash: %lu", cPlayerBase->m_ArmorValue(), cPlayerBase->m_flFlashMaxAlpha());
+	//pPawn->m_ArmorValue() = (int32_t)20;
+
+	int iPlayer = player->GetPlayerSlot();
+
+}
 
 bool match_paused = false;
 bool ct_ready = true;
@@ -256,6 +292,7 @@ CON_COMMAND_CHAT(coach, "Request slot coach")
 	coaches.AddToTail(player);
 
 	ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "Coach enabled, type \4.uncoach \1to cancel");
+	ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "You are on spectator mode, choose \4.ct \1or \4.t");
 	print_coaches();
 
 	
@@ -268,7 +305,8 @@ CON_COMMAND_CHAT(coach, "Request slot coach")
 
 		if (!pController)
 			return;
-
+		
+		pController->ChangeTeam(CS_TEAM_SPECTATOR);
 		pController->m_szClan = "Coaching:";
 		return;
 	});
@@ -298,4 +336,60 @@ CON_COMMAND_CHAT(uncoach, "Undo slot coach")
 		}
 	}
 	ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "You haven't set as \4coach\1 yet");
+}
+
+CON_COMMAND_CHAT(ct, "Switch to CT side")
+{
+	if (!player)
+		return;
+
+	if (!practiceMode && player->m_iTeamNum != CS_TEAM_SPECTATOR)
+	{
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "Switch teams only available on .pracc mode");
+		return;
+	}
+
+	player->ChangeTeam(CS_TEAM_CT);
+}
+
+CON_COMMAND_CHAT(t, "Switch to T side")
+{
+	if (!player)
+		return;
+
+	if (!practiceMode && player->m_iTeamNum != CS_TEAM_SPECTATOR)
+	{
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "Switch teams only available on .pracc mode");
+		return;
+	}
+
+	player->ChangeTeam(CS_TEAM_T);
+}
+
+CON_COMMAND_CHAT(spec, "Switch to Spectator")
+{
+	if (!player)
+		return;
+
+	if (!practiceMode)
+	{
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "Switch teams only available on .pracc mode");
+		return;
+	}
+
+	player->ChangeTeam(CS_TEAM_SPECTATOR);
+}
+
+CON_COMMAND_CHAT(side, "Switch to team selector")
+{
+	if (!player)
+		return;
+
+	if (!practiceMode)
+	{
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "Switch teams only available on .pracc mode");
+		return;
+	}
+
+	player->ChangeTeam(CS_TEAM_NONE);
 }
