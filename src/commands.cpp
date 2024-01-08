@@ -292,6 +292,7 @@ CON_COMMAND_CHAT(coach, "Request slot coach")
 	coaches.AddToTail(player);
 
 	ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "Coach enabled, type \4.uncoach \1to cancel");
+	ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "You are on spectator mode, choose \4.ct \1or \4.t");
 	print_coaches();
 
 	
@@ -304,7 +305,8 @@ CON_COMMAND_CHAT(coach, "Request slot coach")
 
 		if (!pController)
 			return;
-
+		
+		pController->ChangeTeam(CS_TEAM_SPECTATOR);
 		pController->m_szClan = "Coaching:";
 		return;
 	});
