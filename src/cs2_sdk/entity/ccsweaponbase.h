@@ -28,6 +28,7 @@ public:
 
 	SCHEMA_FIELD(uint16_t, m_iItemDefinitionIndex)
 	SCHEMA_FIELD(bool, m_bInitialized)
+	SCHEMA_FIELD(char, m_szCustomName)
 };
 
 class CAttributeContainer

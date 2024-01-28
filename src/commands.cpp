@@ -29,6 +29,8 @@
 #include "entity/ccsplayercontroller.h"
 #include "entity/ccsplayerpawnbase.h"
 
+#include "entity/grenades.h"
+
 #include "entity/cbasemodelentity.h"
 #include "playermanager.h"
 #include "adminsystem.h"
@@ -200,13 +202,35 @@ CON_COMMAND_CHAT(spawn, "teleport to desired spawn")
 	}
 
 	char teamName[256];
-	if(player->m_iTeamNum == CS_TEAM_T){
-		V_snprintf(teamName, sizeof(teamName), "info_player_terrorist");
-	}else if(player->m_iTeamNum == CS_TEAM_CT){
-		V_snprintf(teamName, sizeof(teamName), "info_player_counterterrorist");
+	int target_team_number = CS_TEAM_NONE;
+
+	if(args.ArgC() > 2){
+		char team_id_input[256];
+		V_snprintf(team_id_input, sizeof(team_id_input), "%s", args[2]);
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX"%s ", args[2]);
+		if((std::string)team_id_input == "t"){
+			target_team_number = CS_TEAM_T;
+		}else if((std::string)team_id_input == "ct"){
+			target_team_number = CS_TEAM_CT;
+		}else{
+			ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX"Usage: !spawn <spawn number> <ct/t> ");
+		}
 	}else{
+		target_team_number = player->m_iTeamNum;
+	}
+
+	if(target_team_number == CS_TEAM_SPECTATOR){
 		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX"You cannot teleport in spectator!");
 		return;
+	}
+	if(target_team_number == CS_TEAM_SPECTATOR){
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX"You cannot teleport in spectator!");
+		return;
+	}
+	if(target_team_number == CS_TEAM_T){
+		V_snprintf(teamName, sizeof(teamName), "info_player_terrorist");
+	}else{
+		V_snprintf(teamName, sizeof(teamName), "info_player_counterterrorist");
 	}
 
 	//Count spawnpoints (info_player_counterterrorist & info_player_terrorist)
@@ -291,22 +315,37 @@ CON_COMMAND_CHAT(coach, "Request slot coach")
 
 	coaches.AddToTail(player);
 
-	ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "Coach enabled, type \4.uncoach \1to cancel");
-	ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "You are on spectator mode, choose \4.ct \1or \4.t");
-	print_coaches();
+	int target_team_number = CS_TEAM_SPECTATOR;
 
+	if(args.ArgC() > 1){
+		char team_id_input[256];
+		V_snprintf(team_id_input, sizeof(team_id_input), "%s", args[1]);
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX"%s ", team_id_input);
+		if((std::string)team_id_input == "t"){
+			target_team_number = CS_TEAM_T;
+		}else if((std::string)team_id_input == "ct"){
+			target_team_number = CS_TEAM_CT;
+		}else{
+			ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX"Usage: !spawn <spawn number> <ct/t> ");
+		}
+	}else{
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "Coach enabled, type \4.uncoach \1to cancel");
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "You are on spectator mode, choose \4.ct \1or \4.t");
+	}
+
+	print_coaches();
 	
 	CHandle<CCSPlayerController> hController = player->GetHandle();
 
 	// Gotta do this on the next frame...
-	new CTimer(0.0f, false, false, [hController]()
+	new CTimer(0.0f, false, false, [hController, target_team_number]()
 	{
 		CCSPlayerController *pController = hController.Get();
 
 		if (!pController)
 			return;
 		
-		pController->ChangeTeam(CS_TEAM_SPECTATOR);
+		pController->ChangeTeam(target_team_number);
 		pController->m_szClan = "Coaching:";
 		return;
 	});
@@ -393,3 +432,14 @@ CON_COMMAND_CHAT(side, "Switch to team selector")
 
 	player->ChangeTeam(CS_TEAM_NONE);
 }
+/*
+CON_COMMAND_CHAT(side, "Switch to team selector")
+{
+	CSmokeGrenade* smoke_grenade = nullptr;
+	CUtlVector<CSmokeGrenade*> smokes;
+
+	int minimum_priority = 1;
+	while (nullptr != (smoke_grenade = (CSmokeGrenade*)UTIL_FindEntityByClassname(smoke_grenade, "smokegrenade_projectile"))){
+		smokes.AddToTail(smoke_grenade);
+	}
+}*/
