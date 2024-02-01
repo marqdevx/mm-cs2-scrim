@@ -35,6 +35,7 @@ CAdminSystem* g_pAdminSystem = nullptr;
 CUtlMap<uint32, FnChatCommandCallback_t> g_CommandList(0, 0, DefLessFunc(uint32));
 
 bool practiceMode = false;
+bool no_flash_mode = false;
 extern CUtlVector <CCSPlayerController*> coaches;
 extern void print_coaches();
 

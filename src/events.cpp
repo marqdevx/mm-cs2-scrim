@@ -23,6 +23,7 @@
 #include "ctimer.h"
 #include "eventlistener.h"
 #include "entity/cbaseplayercontroller.h"
+#include "entity/ccsplayerpawnbase.h"
 
 #include "tier0/memdbgon.h"
 
@@ -33,6 +34,9 @@ extern CEntitySystem *g_pEntitySystem;
 CUtlVector<CGameEventListener *> g_vecEventListeners;
 
 extern CUtlVector <CCSPlayerController*> coaches;
+extern bool practiceMode;
+extern bool no_flash_mode;
+
 void RegisterEventListeners()
 {
 	if (!g_gameEventManager)
@@ -119,4 +123,22 @@ GAME_EVENT_F(round_freeze_end)
 			return;
 		});
 	}
+}
+
+GAME_EVENT_F(player_blind){
+	if(!practiceMode) return;
+
+	CBasePlayerController *pTarget = (CBasePlayerController *)g_pEntitySystem->GetBaseEntity((CEntityIndex)(pEvent->GetUint64("userid") + 1));
+	CCSPlayerController* pController = (CCSPlayerController *)g_pEntitySystem->GetBaseEntity((CEntityIndex)(pEvent->GetUint64("userid") + 1));
+	CCSPlayerController* pAttacker = (CCSPlayerController *)g_pEntitySystem->GetBaseEntity((CEntityIndex)(pEvent->GetUint64("attacker") + 1));
+	
+	CCSPlayerController* pPlayer = (CCSPlayerController *)g_pEntitySystem->GetBaseEntity((CEntityIndex)(pEvent->GetUint64("userid") + 1));
+	CCSPlayerPawnBase* cPlayerBase = (CCSPlayerPawnBase*)pPlayer->GetPawn();
+
+	ClientPrint(pAttacker, HUD_PRINTTALK, CHAT_PREFIX "Flashed \04%s\1 for \x04%f\1 s", pTarget->GetPlayerName(), pEvent->GetFloat("blind_duration"));
+
+	if(no_flash_mode) cPlayerBase->m_flFlashMaxAlpha = 2;
+
+	if(pAttacker->GetPlayerSlot() == pController->GetPlayerSlot()) return;
+	ClientPrint(pController, HUD_PRINTTALK, CHAT_PREFIX "Flashed by \04%i\1, for \x04%f\1 s", pEvent->GetUint64("attacker"), pEvent->GetFloat("blind_duration"));
 }

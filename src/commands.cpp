@@ -25,8 +25,10 @@
 #include "utils/entity.h"
 #include "entity/cbaseentity.h"
 #include "entity/ccsweaponbase.h"
-#include "entity/ccsplayercontroller.h"
 #include "entity/ccsplayerpawn.h"
+#include "entity/ccsplayercontroller.h"
+#include "entity/ccsplayerpawnbase.h"
+
 #include "entity/cbasemodelentity.h"
 #include "playermanager.h"
 #include "adminsystem.h"
@@ -40,6 +42,7 @@ extern int g_targetPawn;
 extern int g_targetController;
 
 extern bool practiceMode;
+extern bool no_flash_mode;
 
 void ParseChatCommand(const char *pMessage, CCSPlayerController *pController)
 {
@@ -94,6 +97,39 @@ CON_COMMAND_CHAT(myuid, "test")
 	ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "Your userid is %i, slot: %i, retrieved slot: %i", g_pEngineServer2->GetPlayerUserId(iPlayer).Get(), iPlayer, g_playerManager->GetSlotFromUserId(g_pEngineServer2->GetPlayerUserId(iPlayer).Get()));
 }
 
+
+CON_COMMAND_CHAT(noflash, "noflash"){
+
+	no_flash_mode = !no_flash_mode;
+
+	if (!player)
+		return;
+	
+	ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "Flash mode set to \04%i", no_flash_mode);
+}
+
+CON_COMMAND_CHAT(test, "test")
+{
+	if (!player)
+		return;
+
+
+	//CBasePlayerPawn *pPawn = player->m_hPawn();
+	//pPawn->m_flFlashMaxAlpha() = 0.5f;
+//	player->GetPawn()->m_flFlashMaxAlpha = 0.5f;
+
+	CCSPlayerController* pPlayer = (CCSPlayerController *)g_pEntitySystem->GetBaseEntity((CEntityIndex)(player->GetPlayerSlot()+1));
+	
+	CCSPlayerPawnBase* cPlayerBase = (CCSPlayerPawnBase*)pPlayer->GetPawn();
+	
+	
+	cPlayerBase->m_flFlashMaxAlpha = 2;
+	ClientPrint(pPlayer, HUD_PRINTTALK, "test %i flash: %lu", cPlayerBase->m_ArmorValue(), cPlayerBase->m_flFlashMaxAlpha());
+	//pPawn->m_ArmorValue() = (int32_t)20;
+
+	int iPlayer = player->GetPlayerSlot();
+
+}
 
 bool match_paused = false;
 bool ct_ready = true;
