@@ -335,3 +335,59 @@ CON_COMMAND_CHAT(uncoach, "Undo slot coach")
 	}
 	ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "You haven't set as \4coach\1 yet");
 }
+
+CON_COMMAND_CHAT(ct, "Switch to CT side")
+{
+	if (!player)
+		return;
+
+	if (!practiceMode)
+	{
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "Switch teams only available on .pracc mode");
+		return;
+	}
+
+	player->ChangeTeam(CS_TEAM_CT);
+}
+
+CON_COMMAND_CHAT(t, "Switch to T side")
+{
+	if (!player)
+		return;
+
+	if (!practiceMode)
+	{
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "Switch teams only available on .pracc mode");
+		return;
+	}
+
+	player->ChangeTeam(CS_TEAM_T);
+}
+
+CON_COMMAND_CHAT(spec, "Switch to Spectator")
+{
+	if (!player)
+		return;
+
+	if (!practiceMode)
+	{
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "Switch teams only available on .pracc mode");
+		return;
+	}
+
+	player->ChangeTeam(CS_TEAM_SPECTATOR);
+}
+
+CON_COMMAND_CHAT(side, "Switch to team selector")
+{
+	if (!player)
+		return;
+
+	if (!practiceMode)
+	{
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "Switch teams only available on .pracc mode");
+		return;
+	}
+
+	player->ChangeTeam(CS_TEAM_NONE);
+}
