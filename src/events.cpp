@@ -231,17 +231,28 @@ GAME_EVENT_F(player_hurt){
 GAME_EVENT_F(player_blind){
 	if(!practiceMode) return;
 
-	CBasePlayerController *pTarget = (CBasePlayerController *)g_pEntitySystem->GetBaseEntity((CEntityIndex)(pEvent->GetUint64("userid") + 1));
-	CCSPlayerController* pController = (CCSPlayerController *)g_pEntitySystem->GetBaseEntity((CEntityIndex)(pEvent->GetUint64("userid") + 1));
 	CCSPlayerController* pAttacker = (CCSPlayerController *)g_pEntitySystem->GetBaseEntity((CEntityIndex)(pEvent->GetUint64("attacker") + 1));
-	CBasePlayerController* pAttackerBase = (CCSPlayerController *)g_pEntitySystem->GetBaseEntity((CEntityIndex)(pEvent->GetUint64("attacker") + 1));
-	CCSPlayerController* pPlayer = (CCSPlayerController *)g_pEntitySystem->GetBaseEntity((CEntityIndex)(pEvent->GetUint64("userid") + 1));
-	CCSPlayerPawnBase* cPlayerBase = (CCSPlayerPawnBase*)pPlayer->GetPawn();
+	CBasePlayerController *pTarget = (CBasePlayerController *)g_pEntitySystem->GetBaseEntity((CEntityIndex)(pEvent->GetUint64("userid") + 1));
+	
+	if(!pAttacker || !pTarget)
+		return;
 
-	ClientPrint(pAttacker, HUD_PRINTTALK, CHAT_PREFIX "Flashed \04%s\1 for \x04%f\1 s", pTarget->GetPlayerName(), pEvent->GetFloat("blind_duration"));
+	if(pTarget->GetPlayerName() && pEvent->GetFloat("blind_duration") > 0.0f)
+		ClientPrint(pAttacker, HUD_PRINTTALK, CHAT_PREFIX "Flashed \04%s\1 for \x04%f\1 s", pTarget->GetPlayerName(), pEvent->GetFloat("blind_duration"));
+
+	CCSPlayerController* pController = (CCSPlayerController *)g_pEntitySystem->GetBaseEntity((CEntityIndex)(pEvent->GetUint64("userid") + 1));
+	CCSPlayerPawnBase* cPlayerBase = (CCSPlayerPawnBase*)pController->GetPawn();
+
+	if(!pController)
+		return;
+	if(!cPlayerBase)
+		return;
 
 	if(no_flash_mode) cPlayerBase->m_flFlashMaxAlpha = 2;
+	
+	if(pAttacker->GetPlayerSlot() != pController->GetPlayerSlot())
+		ClientPrint(pController, HUD_PRINTTALK, CHAT_PREFIX "Flashed by \04%s\1, for \x04%f\1 s", pAttacker->GetPlayerName(), pEvent->GetFloat("blind_duration"));
 
-	if(pAttacker->GetPlayerSlot() == pController->GetPlayerSlot()) return;
-	ClientPrint(pController, HUD_PRINTTALK, CHAT_PREFIX "Flashed by \04%s\1, for \x04%f\1 s", pAttacker->GetPlayerName(), pEvent->GetFloat("blind_duration"));
+}
+
 }
