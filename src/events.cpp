@@ -102,10 +102,12 @@ GAME_EVENT_F(round_prestart)
 		int currentTeam = pTarget->m_iTeamNum;
 		int newTeam = CS_TEAM_SPECTATOR;
 
+		pTarget->m_pInGameMoneyServices->m_iAccount = 0;
+
 		pTarget->ChangeTeam(CS_TEAM_SPECTATOR);
 
 		//pTarget->GetPawn()->CommitSuicide(false, true);
-
+		
 		if(half_last_round && !swapped_teams){
 			if(currentTeam == CS_TEAM_CT){
 				newTeam = CS_TEAM_T;
@@ -132,7 +134,8 @@ GAME_EVENT_F(round_prestart)
 			{
 				CCSPlayerController *pController = hController.Get();
 				if(!pController) return;	//avoid crash if coach is not connected
-				pController->GetPawn()->CommitSuicide(false, true);
+				//pController->GetPawn()->CommitSuicide(false, true);
+				pController->m_pInGameMoneyServices->m_iAccount = 0;
 				pController->m_pActionTrackingServices->m_matchStats().m_iDeaths = 0;
 				return;
 			});
@@ -153,7 +156,7 @@ GAME_EVENT_F(round_start)
 
 		coaches[i]->m_pInGameMoneyServices->m_iAccount = 0;
 
-		coaches[i]->GetPawn()->CommitSuicide(false, true);
+		//coaches[i]->GetPawn()->CommitSuicide(false, true);
 		
 		coaches[i]->m_pActionTrackingServices->m_matchStats().m_iKills = 0;
 		coaches[i]->m_pActionTrackingServices->m_matchStats().m_iDeaths = 0;
@@ -162,6 +165,21 @@ GAME_EVENT_F(round_start)
 	}
 }
 
+GAME_EVENT_F(round_poststart)
+{
+	if (coaches.Count() < 1) return;
+	
+	FOR_EACH_VEC(coaches,i){
+		CCSPlayerController *pTarget = (CCSPlayerController *)g_pEntitySystem->GetBaseEntity((CEntityIndex)(coaches[i]->GetPlayerSlot() + 1));
+
+		coaches[i]->m_pInGameMoneyServices->m_iAccount = 0;
+		
+		coaches[i]->m_pActionTrackingServices->m_matchStats().m_iKills = 0;
+		coaches[i]->m_pActionTrackingServices->m_matchStats().m_iDeaths = 0;
+		coaches[i]->m_pActionTrackingServices->m_matchStats().m_iAssists = 0;
+		coaches[i]->m_pActionTrackingServices->m_matchStats().m_iDamage = 0;
+	}
+}
 
 GAME_EVENT_F(round_freeze_end)
 {
@@ -172,6 +190,11 @@ GAME_EVENT_F(round_freeze_end)
 		
 		if(!pTarget) return;	//avoid crash if coach is not connected
 
+		int currentTeam = pTarget->m_iTeamNum;
+		pTarget->ChangeTeam(CS_TEAM_SPECTATOR);
+		pTarget->ChangeTeam(currentTeam);
+		pTarget->GetPawn()->CommitSuicide(false, true);
+		
 		CHandle<CCSPlayerController> hController = pTarget->GetHandle();
 		
 		new CTimer(2.0f, false, false, [hController]()
