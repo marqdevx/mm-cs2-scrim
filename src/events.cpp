@@ -125,6 +125,22 @@ GAME_EVENT_F(round_freeze_end)
 	}
 }
 
+GAME_EVENT_F(player_hurt){
+	if(!practiceMode) return;
+
+	CCSPlayerController* pController = (CCSPlayerController *)g_pEntitySystem->GetBaseEntity((CEntityIndex)(pEvent->GetUint64("attacker") + 1));
+	
+	if (!pController)
+		return;
+
+	CCSPlayerController* pHurt = (CCSPlayerController *)g_pEntitySystem->GetBaseEntity((CEntityIndex)(pEvent->GetUint64("userid") + 1));
+	//ClientPrintAll(HUD_PRINTTALK, "Smoke end %i", pEvent->GetUint64("entityid"));
+	int damage = pEvent->GetFloat("dmg_health");
+	int actualHealth = pEvent->GetFloat("health");
+	ClientPrint(pController, HUD_PRINTTALK, CHAT_PREFIX "Damage done \04%d \01to \04%s\1[\04%d\01]", damage , pHurt->GetPlayerName(), actualHealth);
+	
+}
+
 GAME_EVENT_F(player_blind){
 	if(!practiceMode) return;
 
