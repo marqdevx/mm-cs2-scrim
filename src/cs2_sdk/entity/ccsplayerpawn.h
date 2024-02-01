@@ -27,4 +27,5 @@ public:
 	DECLARE_SCHEMA_CLASS(CCSPlayerPawn);
 
 	SCHEMA_FIELD(CCSPlayer_ActionTrackingServices*, m_pActionTrackingServices)
+
 };

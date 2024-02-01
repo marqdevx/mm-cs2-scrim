@@ -132,6 +132,7 @@ public:
 	SCHEMA_FIELD(uint32, m_spawnflags)
 	SCHEMA_FIELD(uint32, m_fFlags)
 	SCHEMA_FIELD(LifeState_t, m_lifeState)
+	
 
 	int entindex() { return m_pEntity->m_EHandle.GetEntryIndex(); }
 

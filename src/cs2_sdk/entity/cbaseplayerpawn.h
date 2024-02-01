@@ -23,6 +23,7 @@
 #include "cbasemodelentity.h"
 #include "services.h"
 
+
 class CBasePlayerPawn : public CBaseModelEntity
 {
 public:
