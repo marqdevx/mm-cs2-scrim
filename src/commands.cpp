@@ -200,13 +200,35 @@ CON_COMMAND_CHAT(spawn, "teleport to desired spawn")
 	}
 
 	char teamName[256];
-	if(player->m_iTeamNum == CS_TEAM_T){
-		V_snprintf(teamName, sizeof(teamName), "info_player_terrorist");
-	}else if(player->m_iTeamNum == CS_TEAM_CT){
-		V_snprintf(teamName, sizeof(teamName), "info_player_counterterrorist");
+	int target_team_number = CS_TEAM_NONE;
+
+	if(args.ArgC() > 2){
+		char team_id_input[256];
+		V_snprintf(team_id_input, sizeof(team_id_input), "%s", args[2]);
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX"%s ", args[2]);
+		if((std::string)team_id_input == "t"){
+			target_team_number = CS_TEAM_T;
+		}else if((std::string)team_id_input == "ct"){
+			target_team_number = CS_TEAM_CT;
+		}else{
+			ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX"Usage: !spawn <spawn number> <ct/t> ");
+		}
 	}else{
+		target_team_number = player->m_iTeamNum;
+	}
+
+	if(target_team_number == CS_TEAM_SPECTATOR){
 		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX"You cannot teleport in spectator!");
 		return;
+	}
+	if(target_team_number == CS_TEAM_SPECTATOR){
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX"You cannot teleport in spectator!");
+		return;
+	}
+	if(target_team_number == CS_TEAM_T){
+		V_snprintf(teamName, sizeof(teamName), "info_player_terrorist");
+	}else{
+		V_snprintf(teamName, sizeof(teamName), "info_player_counterterrorist");
 	}
 
 	//Count spawnpoints (info_player_counterterrorist & info_player_terrorist)
