@@ -653,7 +653,7 @@ CON_COMMAND_CHAT(setteam, "set a player's team")
 
 CON_COMMAND_CHAT(noclip, "toggle noclip on yourself")
 {
-	if (!player)
+	if (!player && practiceMode)
 		return;
 
 	int iCommandPlayer = player->GetPlayerSlot();
