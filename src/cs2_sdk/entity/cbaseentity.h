@@ -125,21 +125,32 @@ public:
 	SCHEMA_FIELD(float, m_lastNetworkChange)
 	SCHEMA_FIELD_POINTER(CNetworkTransmitComponent, m_NetworkTransmitComponent)
 	SCHEMA_FIELD(int, m_iHealth)
+	SCHEMA_FIELD(int, m_iMaxHealth)
 	SCHEMA_FIELD(int, m_iTeamNum)
+	SCHEMA_FIELD(Vector, m_vecAbsVelocity)
 	SCHEMA_FIELD(Vector, m_vecBaseVelocity)
 	SCHEMA_FIELD(CCollisionProperty*, m_pCollision)
 	SCHEMA_FIELD(MoveType_t, m_MoveType)
 	SCHEMA_FIELD(uint32, m_spawnflags)
 	SCHEMA_FIELD(uint32, m_fFlags)
 	SCHEMA_FIELD(LifeState_t, m_lifeState)
-	
+	SCHEMA_FIELD_POINTER(CUtlStringToken, m_nSubclassID)
+	SCHEMA_FIELD(float, m_flGravityScale)
+	SCHEMA_FIELD(CUtlString, m_sUniqueHammerID);
 
 	int entindex() { return m_pEntity->m_EHandle.GetEntryIndex(); }
 
 	Vector GetAbsOrigin() { return m_CBodyComponent->m_pSceneNode->m_vecAbsOrigin; }
+	QAngle GetAbsRotation() { return m_CBodyComponent->m_pSceneNode->m_angAbsRotation; }
 	void SetAbsOrigin(Vector vecOrigin) { m_CBodyComponent->m_pSceneNode->m_vecAbsOrigin = vecOrigin; }
+	void SetAbsRotation(QAngle angAbsRotation) { m_CBodyComponent->m_pSceneNode->m_angAbsRotation = angAbsRotation; }
 
 	void Teleport(Vector *position, QAngle *angles, Vector *velocity) { static int offset = g_GameConfig->GetOffset("Teleport"); CALL_VIRTUAL(void, offset, this, position, angles, velocity); }
+
+	void TakeDamage(int iDamage)
+	{
+		m_iHealth = m_iHealth() - iDamage;
+	}
 
 	void CollisionRulesChanged()
 	{

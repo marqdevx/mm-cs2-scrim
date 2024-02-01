@@ -36,6 +36,8 @@ enum class ETargetType {
 	CT,
 };
 
+
+
 class ZEPlayer
 {
 public:
@@ -83,6 +85,9 @@ public:
 	void OnAuthenticated();
 	void CheckAdmin();
 	void CheckInfractions();
+	
+	Vector lastThrow_position;
+	QAngle lastThrow_rotation;
 
 private:
 	bool m_bAuthenticated;

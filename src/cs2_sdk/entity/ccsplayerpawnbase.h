@@ -15,6 +15,7 @@ public:
     SCHEMA_FIELD(CHandle<CCSPlayerController>, m_hOriginalController)
 	SCHEMA_FIELD(float, m_flFlashMaxAlpha)
     SCHEMA_FIELD(int32_t , m_ArmorValue)
+    SCHEMA_FIELD(QAngle, m_angEyeAngles)
 
 
     CHandle<CCSPlayerController> GetCCS() { return m_hOriginalController.Get(); }

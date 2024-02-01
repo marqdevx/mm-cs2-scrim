@@ -568,3 +568,19 @@ CON_COMMAND_CHAT(side, "Switch to team selector")
 
 	player->ChangeTeam(CS_TEAM_NONE);
 }
+
+CON_COMMAND_CHAT(last, "Teleport to the last thrown grenade")
+{
+	if (!player)
+		return;
+
+	if (!practiceMode)
+	{
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "Last grenade teleport only available on .pracc mode");
+		return;
+	}
+
+	ZEPlayer *pPlayer = g_playerManager->GetPlayer(player->GetPlayerSlot());
+	
+	player->GetPawn()->Teleport(&pPlayer->lastThrow_position, &pPlayer->lastThrow_rotation, nullptr);
+}

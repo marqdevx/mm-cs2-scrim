@@ -255,4 +255,24 @@ GAME_EVENT_F(player_blind){
 
 }
 
+GAME_EVENT_F(grenade_thrown){
+	if (!practiceMode)
+		return;
+
+	CCSPlayerController* pController = (CCSPlayerController *)g_pEntitySystem->GetBaseEntity((CEntityIndex)(pEvent->GetUint64("userid") + 1));
+	
+	if (!pController)
+		return;
+
+	//CCSPlayerPawn* cPlayerBase = (CCSPlayerPawn*)pController->GetPawn();
+	Vector currentPos = pController->GetPawn()->GetAbsOrigin();
+
+	CCSPlayerPawnBase* cPlayerBase = (CCSPlayerPawnBase*)pController->GetPawn();
+	QAngle currentAngle = cPlayerBase->m_angEyeAngles;
+	
+	ClientPrintAll( HUD_PRINTTALK, CHAT_PREFIX "Pos: %f, %f, %f", currentPos.x, currentPos.y, currentPos.z);
+
+	ZEPlayer *pPlayer = g_playerManager->GetPlayer(pController->GetPlayerSlot());
+	pPlayer->lastThrow_position = currentPos;
+	pPlayer->lastThrow_rotation = currentAngle;
 }
