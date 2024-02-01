@@ -315,29 +315,7 @@ void CS2Scrim::Hook_PostEvent(CSplitScreenSlot nSlot, bool bLocalOnly, int nClie
 
 	NetMessageInfo_t* info = pEvent->GetNetMessageInfo();
 
-	//CMsgTEFireBullets
-	if (info->m_MessageId == GE_FireBulletsId || info->m_MessageId == TE_WorldDecalId)
-	{
-		// Can later do a bit mask for players using stopsound but this will do for now
-		for (uint64 i = 0; i < MAXPLAYERS; i++)
-		{
-			ZEPlayer *pPlayer = g_playerManager->GetPlayer(i);
-
-			// A client might be already excluded from the event possibly due to being too far away, so ignore them
-			if (!(*(uint64 *)clients & ((uint64)1 << i)))
-				continue;
-
-			if (!pPlayer)
-				continue;
-
-			if ((info->m_MessageId == GE_FireBulletsId && pPlayer->IsUsingStopSound()) || 
-				(info->m_MessageId == TE_WorldDecalId && pPlayer->IsUsingStopDecals()))
-			{
-				*(uint64*)clients &= ~((uint64)1 << i);
-				nClientCount--;
-			}
-		}
-	}
+	
 }
 
 void CS2Scrim::AllPluginsLoaded()
