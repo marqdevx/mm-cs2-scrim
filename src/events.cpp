@@ -270,7 +270,7 @@ GAME_EVENT_F(grenade_thrown){
 	CCSPlayerPawnBase* cPlayerBase = (CCSPlayerPawnBase*)pController->GetPawn();
 	QAngle currentAngle = cPlayerBase->m_angEyeAngles;
 	
-	ClientPrintAll( HUD_PRINTTALK, CHAT_PREFIX "Pos: %f, %f, %f", currentPos.x, currentPos.y, currentPos.z);
+	//ClientPrintAll( HUD_PRINTTALK, CHAT_PREFIX "Pos: %f, %f, %f", currentPos.x, currentPos.y, currentPos.z);
 
 	ZEPlayer *pPlayer = g_playerManager->GetPlayer(pController->GetPlayerSlot());
 	pPlayer->lastThrow_position = currentPos;
