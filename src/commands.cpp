@@ -313,22 +313,37 @@ CON_COMMAND_CHAT(coach, "Request slot coach")
 
 	coaches.AddToTail(player);
 
-	ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "Coach enabled, type \4.uncoach \1to cancel");
-	ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "You are on spectator mode, choose \4.ct \1or \4.t");
-	print_coaches();
+	int target_team_number = CS_TEAM_SPECTATOR;
 
+	if(args.ArgC() > 1){
+		char team_id_input[256];
+		V_snprintf(team_id_input, sizeof(team_id_input), "%s", args[1]);
+
+		if((std::string)team_id_input == "t"){
+			target_team_number = CS_TEAM_T;
+		}else if((std::string)team_id_input == "ct"){
+			target_team_number = CS_TEAM_CT;
+		}else{
+			ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX"Usage: .coach <ct/t> ");
+		}
+	}else{
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "Coach enabled, type \4.uncoach \1to cancel");
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "You are on spectator mode, choose \4.ct \1or \4.t");
+	}
+
+	print_coaches();
 	
 	CHandle<CCSPlayerController> hController = player->GetHandle();
 
 	// Gotta do this on the next frame...
-	new CTimer(0.0f, false, false, [hController]()
+	new CTimer(0.0f, false, false, [hController, target_team_number]()
 	{
 		CCSPlayerController *pController = hController.Get();
 
 		if (!pController)
 			return;
 		
-		pController->ChangeTeam(CS_TEAM_SPECTATOR);
+		pController->ChangeTeam(target_team_number);
 		pController->m_szClan = "Coaching:";
 		return;
 	});
