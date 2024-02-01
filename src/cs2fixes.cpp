@@ -236,6 +236,9 @@ bool CS2Scrim::Load(PluginId id, ISmmAPI *ismm, char *error, size_t maxlen, bool
 
 	Message("g_gameEventManager - %p\n", g_gameEventManager);
 
+	// Execute cs2scrim config file
+	g_pEngineServer2->ServerCommand("exec cs2scrim/cs2scrim.cfg");
+
 	srand(time(0));
 
 	return true;

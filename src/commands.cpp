@@ -87,6 +87,129 @@ void ClientPrint(CBasePlayerController *player, int hud_dest, const char *msg, .
 	addresses::ClientPrint(player, hud_dest, buf, nullptr, nullptr, nullptr, nullptr);
 }
 
+/* CVARS */
+// CONVAR_TODO
+bool g_bEnableCoach = true;
+CON_COMMAND_F(cs2scrim_coach, "Whether to enable weapon commands", FCVAR_LINKED_CONCOMMAND | FCVAR_SPONLY)
+{
+	if (args.ArgC() < 2)
+		Msg("%s %i\n", args[0], g_bEnableCoach);
+	else
+		g_bEnableCoach = V_StringToBool(args[1], false);
+}
+
+bool g_bEnablePractice = true;
+CON_COMMAND_F(cs2scrim_pracc, "Whether to enable weapon commands", FCVAR_LINKED_CONCOMMAND | FCVAR_SPONLY){
+	if (args.ArgC() < 2)
+		Msg("%s %i\n", args[0], g_bEnablePractice);
+	else
+		g_bEnablePractice = V_StringToBool(args[1], false);
+}
+
+bool g_bEnableScrim = true;
+CON_COMMAND_F(cs2scrim_scrim, "Whether to enable weapon commands", FCVAR_LINKED_CONCOMMAND | FCVAR_SPONLY){
+	if (args.ArgC() < 2)
+		Msg("%s %i\n", args[0], g_bEnableScrim);
+	else
+		g_bEnableScrim = V_StringToBool(args[1], false);
+}
+
+bool g_bEnableRecord = true;
+CON_COMMAND_F(cs2scrim_demo, "Whether to enable weapon commands", FCVAR_LINKED_CONCOMMAND | FCVAR_SPONLY){
+	if (args.ArgC() < 2)
+		Msg("%s %i\n", args[0], g_bEnableRecord);
+	else
+		g_bEnableRecord = V_StringToBool(args[1], false);
+}
+
+bool g_bEnableRestore = true;
+CON_COMMAND_F(cs2scrim_restore, "Whether to enable weapon commands", FCVAR_LINKED_CONCOMMAND | FCVAR_SPONLY){
+	if (args.ArgC() < 2)
+		Msg("%s %i\n", args[0], g_bEnableRestore);
+	else
+		g_bEnableRestore = V_StringToBool(args[1], false);
+}
+
+bool g_bEnableRcon = true;
+CON_COMMAND_F(cs2scrim_rcon, "Whether to enable weapon commands", FCVAR_LINKED_CONCOMMAND | FCVAR_SPONLY){
+	if (args.ArgC() < 2)
+		Msg("%s %i\n", args[0], g_bEnableRcon);
+	else
+		g_bEnableRcon = V_StringToBool(args[1], false);
+}
+
+bool g_bEnablePause = true;
+CON_COMMAND_F(cs2scrim_pause, "Whether to enable weapon commands", FCVAR_LINKED_CONCOMMAND | FCVAR_SPONLY)
+{
+	if (args.ArgC() < 2)
+		Msg("%s %i\n", args[0], g_bEnablePause);
+	else
+		g_bEnablePause = V_StringToBool(args[1], false);
+}
+
+bool g_bEnablePraccSpawn = true;
+CON_COMMAND_F(cs2scrim_practice_spawn, "Whether to enable weapon commands", FCVAR_LINKED_CONCOMMAND | FCVAR_SPONLY)
+{
+	if (args.ArgC() < 2)
+		Msg("%s %i\n", args[0], g_bEnablePraccSpawn);
+	else
+		g_bEnablePraccSpawn = V_StringToBool(args[1], false);
+}
+
+bool g_bEnableBan = true;
+CON_COMMAND_F(cs2scrim_admin_ban_enable, "Whether to enable weapon commands", FCVAR_LINKED_CONCOMMAND | FCVAR_SPONLY)
+{
+	if (args.ArgC() < 2)
+		Msg("%s %i\n", args[0], g_bEnableBan);
+	else
+		g_bEnableBan = V_StringToBool(args[1], false);
+}
+
+bool g_bEnableKick = true;
+CON_COMMAND_F(cs2scrim_admin_kick, "Whether to enable weapon commands", FCVAR_LINKED_CONCOMMAND | FCVAR_SPONLY)
+{
+	if (args.ArgC() < 2)
+		Msg("%s %i\n", args[0], g_bEnableKick);
+	else
+		g_bEnableKick = V_StringToBool(args[1], false);
+}
+
+bool g_bEnableGag = true;
+CON_COMMAND_F(cs2scrim_admin_gag, "Whether to enable weapon commands", FCVAR_LINKED_CONCOMMAND | FCVAR_SPONLY)
+{
+	if (args.ArgC() < 2)
+		Msg("%s %i\n", args[0], g_bEnableGag);
+	else
+		g_bEnableGag = V_StringToBool(args[1], false);
+}
+
+bool g_bEnableSlay = true;
+CON_COMMAND_F(cs2scrim_admin_slay, "Whether to enable weapon commands", FCVAR_LINKED_CONCOMMAND | FCVAR_SPONLY)
+{
+	if (args.ArgC() < 2)
+		Msg("%s %i\n", args[0], g_bEnableSlay);
+	else
+		g_bEnableSlay = V_StringToBool(args[1], false);
+}
+
+bool g_bEnableTeleport = true;
+CON_COMMAND_F(cs2scrim_admin_teleport, "Whether to enable weapon commands", FCVAR_LINKED_CONCOMMAND | FCVAR_SPONLY)
+{
+	if (args.ArgC() < 2)
+		Msg("%s %i\n", args[0], g_bEnableTeleport);
+	else
+		g_bEnableTeleport = V_StringToBool(args[1], false);
+}
+
+bool g_bEnableTeamControl = true;
+CON_COMMAND_F(cs2scrim_admin_team, "Whether to enable weapon commands", FCVAR_LINKED_CONCOMMAND | FCVAR_SPONLY)
+{
+	if (args.ArgC() < 2)
+		Msg("%s %i\n", args[0], g_bEnableTeamControl);
+	else
+		g_bEnableTeamControl = V_StringToBool(args[1], false);
+}
+/* Player commands */
 CON_COMMAND_CHAT(myuid, "test")
 {
 	if (!player)
@@ -137,6 +260,9 @@ bool t_ready = true;
 
 CON_COMMAND_CHAT(pause, "Request pause")
 {
+	if(!g_bEnablePause)
+		return;
+
 	if (!player)
 		return;
 
@@ -155,6 +281,9 @@ CON_COMMAND_CHAT(pause, "Request pause")
 
 CON_COMMAND_CHAT(unpause, "Request unpause")
 {
+	if(!g_bEnablePause)
+		return;
+
 	if (!player)
 		return;
 
@@ -185,6 +314,9 @@ CON_COMMAND_CHAT(unpause, "Request unpause")
 
 CON_COMMAND_CHAT(spawn, "teleport to desired spawn")
 {
+	if (!g_bEnablePraccSpawn)
+		return;
+
 	if (!player)
 		return;
 	
@@ -296,6 +428,9 @@ void print_coaches(){
 
 CON_COMMAND_CHAT(coach, "Request slot coach")
 {
+	if(!g_bEnableCoach)
+		return;
+
 	if (!player)
 		return;
 	
@@ -352,6 +487,9 @@ CON_COMMAND_CHAT(coach, "Request slot coach")
 //Todo, unify different aliases
 CON_COMMAND_CHAT(uncoach, "Undo slot coach")
 {
+	if(!g_bEnableCoach)
+		return;
+
 	if (!player)
 		return;
 	

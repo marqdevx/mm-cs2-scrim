@@ -43,6 +43,22 @@ char level_name[256];	//Map name workaround for demo names, only when .map has b
 
 #define ADMIN_PREFIX "Admin %s has "
 
+//CVARS
+extern bool g_bEnableBan;
+extern bool g_bEnableCoach;
+extern bool g_bEnableGag;
+extern bool g_bEnableKick;
+extern bool g_bEnablePause;
+extern bool g_bEnablePraccSpawn;
+extern bool g_bEnablePractice;
+extern bool g_bEnableRcon;
+extern bool g_bEnableRecord;
+extern bool g_bEnableRestore;
+extern bool g_bEnableScrim;
+extern bool g_bEnableSlay;
+extern bool g_bEnableTeamControl;
+extern bool g_bEnableTeleport;
+
 CON_COMMAND_F(c_reload_admins, "Reload admin config", FCVAR_SPONLY | FCVAR_LINKED_CONCOMMAND)
 {
 	if (!g_pAdminSystem->LoadAdmins())
@@ -81,6 +97,9 @@ CON_COMMAND_F(c_reload_infractions, "Reload infractions file", FCVAR_SPONLY | FC
 
 CON_COMMAND_CHAT(rcon, "fake rcon")
 {
+	if (!g_bEnableRcon)
+		return;
+	
 	if (!player)
 		return;
 
@@ -110,6 +129,9 @@ CON_COMMAND_CHAT(rcon, "fake rcon")
 
 CON_COMMAND_CHAT(ban, "ban a player")
 {
+	if(!g_bEnableBan)
+		return;
+
 	if (!player)
 		return;
 
@@ -174,6 +196,9 @@ CON_COMMAND_CHAT(ban, "ban a player")
 
 CON_COMMAND_CHAT(gag, "gag a player")
 {
+	if(!g_bEnableGag)
+		return;
+
 	if (!player)
 		return;
 
@@ -254,6 +279,9 @@ CON_COMMAND_CHAT(gag, "gag a player")
 
 CON_COMMAND_CHAT(ungag, "ungags a player")
 {
+	if(!g_bEnableGag)
+		return;
+
 	if (!player)
 		return;
 
@@ -324,6 +352,9 @@ CON_COMMAND_CHAT(ungag, "ungags a player")
 
 CON_COMMAND_CHAT(kick, "kick a player")
 {
+	if(!g_bEnableKick)
+		return;
+
 	if (!player)
 		return;
 
@@ -371,6 +402,9 @@ CON_COMMAND_CHAT(kick, "kick a player")
 
 CON_COMMAND_CHAT(slay, "slay a player")
 {
+	if(!g_bEnableSlay)
+		return;
+
 	if (!player)
 		return;
 
@@ -430,6 +464,9 @@ CON_COMMAND_CHAT(slay, "slay a player")
 
 CON_COMMAND_CHAT(goto, "teleport to a player")
 {
+	if(!g_bEnableTeleport)
+		return;
+
 	if (!player)
 		return;
 
@@ -481,6 +518,9 @@ CON_COMMAND_CHAT(goto, "teleport to a player")
 
 CON_COMMAND_CHAT(bring, "bring a player")
 {
+	if(!g_bEnableTeleport)
+		return;
+
 	if (!player)
 		return;
 
@@ -542,6 +582,9 @@ CON_COMMAND_CHAT(bring, "bring a player")
 
 CON_COMMAND_CHAT(setteam, "set a player's team")
 {
+	if(!g_bEnableTeamControl)
+		return;
+
 	if (!player)
 		return;
 
@@ -954,6 +997,9 @@ void CGagInfraction::UndoInfraction(ZEPlayer *player)
 //CS2Scrim custom commands
 CON_COMMAND_CHAT(scrim, "Scrim mode")
 {
+	if (!g_bEnableScrim)
+		return;
+
 	if (!player)
 		return;
 
@@ -983,6 +1029,9 @@ CON_COMMAND_CHAT(scrim, "Scrim mode")
 
 CON_COMMAND_CHAT(pracc, "Practice mode")
 {
+	if(!g_bEnablePractice)
+		return;
+
 	if (!player)
 		return;
 	
@@ -1010,6 +1059,9 @@ CON_COMMAND_CHAT(pracc, "Practice mode")
 
 CON_COMMAND_CHAT(forceunpause, "Force unpause")
 {
+	if(!g_bEnablePause)
+		return;
+
 	if (!player)
 		return;
 
@@ -1075,6 +1127,9 @@ CON_COMMAND_CHAT(map, "change map")
 
 CON_COMMAND_CHAT(restore, "Restore round")
 {
+	if (!g_bEnableRestore)
+		return;
+	
 	if (!player)
 		return;
 		
@@ -1121,6 +1176,9 @@ CON_COMMAND_CHAT(restore, "Restore round")
 char demoName[128];
 CON_COMMAND_CHAT(record, "Record demo")
 {
+	if (!g_bEnableRecord)
+		return;
+
 	if (!player)
 		return;
 
@@ -1167,6 +1225,9 @@ CON_COMMAND_CHAT(record, "Record demo")
 
 CON_COMMAND_CHAT(stoprecord, "Stop demo recording")
 {
+	if (!g_bEnableRecord)
+		return;
+	
 	if (!player)
 		return;
 
