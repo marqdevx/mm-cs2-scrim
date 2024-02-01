@@ -80,6 +80,15 @@ This plugin adds the minimum requirements for competitive teams that need a more
 
 > I'll try to documentate everything as better as possible, feel free to leave suggestions!
 
+
+## Installation instructions
+
+[![Set up video](https://img.youtube.com/vi/thk78MDsQnc/0.jpg)]([https://www.youtube.com/watch?v=YOUTUBE_VIDEO_ID_HERE](https://www.youtube.com/watch?v=thk78MDsQnc))  
+Set up video: https://www.youtube.com/watch?v=thk78MDsQnc
+
+### cs2scrim config
+You can enable/disable the features of the plugin by changing the values at `<server>/game/csgo/cfg/cs2scrim/cs2scrim.cfg`
+
 ## Compilation
 
 ### Requirements
@@ -87,15 +96,20 @@ This plugin adds the minimum requirements for competitive teams that need a more
 - [Metamod:Source](https://www.sourcemm.net/downloads.php/?branch=master) (build 1219 or higher)
 - [AMBuild](https://wiki.alliedmods.net/Ambuild)
 
-### Instructions
-[![Set up video](https://img.youtube.com/vi/thk78MDsQnc/0.jpg)]([https://www.youtube.com/watch?v=YOUTUBE_VIDEO_ID_HERE](https://www.youtube.com/watch?v=thk78MDsQnc))  
-Set up video: https://www.youtube.com/watch?v=thk78MDsQnc
+## Credits
 
-## Authors from the [original repository](https://github.com/Source2ZE/CS2Fixes/)
+### Authors from CS2Fixes
+[original repository](https://github.com/Source2ZE/CS2Fixes/)
 - [@xen-000](https://github.com/xen-000)
 - [@poggicek](https://github.com/poggicek)
 
-## Credits
+This people did the hard work, and keep doing it adding features to CS2Fixes, check them out (they also made the zombie reborn innit).
+I contacted Xen through discord before releasing this repository and he gave me some suggestions and approval to release it within their license, thanks!
+
+### Splewis
 Almost all of the features are originally from the CS:GO plugin https://github.com/splewis/csgo-practice-mode, using it as reference. Thanks @splewis! (hope to see your work on CS2)
 
 For example the spawn workaround to get the competitive one, is checking the priority value of the spawns.
+
+### CKRAS Hosting
+[CKRAS Hosting Team](https://www.ckras.com/en) They liked the addon, they contacted me and helped trying out the best way to create the coach, find bugs and give feedback.
