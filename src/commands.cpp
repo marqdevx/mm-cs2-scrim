@@ -50,7 +50,7 @@ void ParseChatCommand(const char *pMessage, CCSPlayerController *pController)
 		return;
 
 	CCommand args;
-	args.Tokenize(pMessage + 1);
+	args.Tokenize(pMessage);
 
 	uint16 index = g_CommandList.Find(hash_32_fnv1a_const(args[0]));
 
