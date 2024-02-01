@@ -1,5 +1,5 @@
 #pragma once
-#include "CBasePlayerPawn.h"
+#include "cbaseplayerpawn.h"
 #include "ccsplayercontroller.h"
 #include "cbaseentity.h"
 #include "ehandle.h"
