@@ -597,12 +597,12 @@ const char *CS2Scrim::GetLogTag()
 
 const char *CS2Scrim::GetAuthor()
 {
-	return "marqdevx tweak over xen & poggu";
+	return "marqdevx (ρλd)";
 }
 
 const char *CS2Scrim::GetDescription()
 {
-	return "A bunch of experiments thrown together into one big mess of a plugin.";
+	return "CS2Fixes port, a minimalistic plugin focused for scrim and practice";
 }
 
 const char *CS2Scrim::GetName()
