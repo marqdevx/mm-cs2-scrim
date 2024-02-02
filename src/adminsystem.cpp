@@ -196,7 +196,9 @@ CON_COMMAND_CHAT(ban, "ban a player")
 
 CON_COMMAND_CHAT(unban, "unbans a player")
 {
-	
+	if(!g_bEnableBan)
+		return;
+
 	if (!player)
 		return;
 
