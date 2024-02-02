@@ -1158,6 +1158,7 @@ CON_COMMAND_CHAT(map, "change map")
 		return;
 	}
 */
+	//V_strncpy
 	V_snprintf(level_name, sizeof(level_name), "%s", args[1]);
 
 	char buf[MAX_PATH];
