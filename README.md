@@ -52,31 +52,35 @@ This plugin adds the minimum requirements for competitive teams that need a more
 ## Roadmap
 - Scrim
   - [X] Pauses
-  - [X] Medic (round backup)
+  - [X] Medic (round backup/restore)
   - [X] Coach
   - [X] gotv .record
     - [X] include date and time
-    - [ ] include map name
+    - [X] include map name
+      - [ ] Automatically
   - [ ] Damage print on round-end
 - Practice
   - Maps
     - [X] Map
     - [X] Spawns
       - [X] Only show competitive spawns
-  - Utility
+  - Utility (grenades)
+    - Flashes
+      - [X] No flash effect
+      - [X] Flashed targets and time flashed
     - [ ] Remove smokes
     - [ ] Rethrow
     - [ ] Throw information (air-time, bounces...)
     - [ ] Save throws and lineups
+      - [X] Last
   - Misc
-    - [ ] Move to spec
+    - [X] Move to spec or team side
     - [X] Noclip
-    - [ ] No flash effect
     - [ ] Create a "menu" workaround, using shoot and reload feedback for example, to confirm or cancel
+    - [X] Damage information
   - BOTs management
       - [ ] Place
       - [ ] Boost
-      - [ ] Util and damage feedback
 
 > I'll try to documentate everything as better as possible, feel free to leave suggestions!
 
