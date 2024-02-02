@@ -157,7 +157,7 @@ CON_COMMAND_F(cs2scrim_practice_spawn, "Whether to enable weapon commands", FCVA
 }
 
 bool g_bEnableBan = true;
-CON_COMMAND_F(cs2scrim_admin_ban_enable, "Whether to enable weapon commands", FCVAR_LINKED_CONCOMMAND | FCVAR_SPONLY)
+CON_COMMAND_F(cs2scrim_admin_ban, "Whether to enable weapon commands", FCVAR_LINKED_CONCOMMAND | FCVAR_SPONLY)
 {
 	if (args.ArgC() < 2)
 		Msg("%s %i\n", args[0], g_bEnableBan);
