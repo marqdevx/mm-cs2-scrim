@@ -660,13 +660,12 @@ CON_COMMAND_CHAT(setteam, "set a player's team")
 
 	for (int i = 0; i < iNumClients; i++)
 	{
-		CBasePlayerController *pTarget = (CBasePlayerController *)g_pEntitySystem->GetBaseEntity((CEntityIndex)(pSlots[i] + 1));
+		CCSPlayerController *pTarget = (CCSPlayerController *)g_pEntitySystem->GetBaseEntity((CEntityIndex)(pSlots[i] + 1));
 
 		if (!pTarget)
 			continue;
 
-		pTarget->m_iTeamNum = iTeam;
-		pTarget->GetPawn()->m_iTeamNum = iTeam;
+		pTarget->ChangeTeam(iTeam);
 
 		if (nType < ETargetType::ALL)
 			ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX ADMIN_PREFIX "moved %s to team %i.", player->GetPlayerName(), pTarget->GetPlayerName(), iTeam);
