@@ -222,14 +222,7 @@ CON_COMMAND_CHAT(myuid, "test")
 
 
 CON_COMMAND_CHAT(noflash, "noflash"){
-
-	no_flash_mode = !no_flash_mode;
-
-	if (!player)
 		return;
-	
-	ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "Flash mode set to \04%i", no_flash_mode);
-}
 
 	if (!player)
 		return;
