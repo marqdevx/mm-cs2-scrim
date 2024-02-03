@@ -582,7 +582,7 @@ const char *CS2Scrim::GetLicense()
 
 const char *CS2Scrim::GetVersion()
 {
-	return "1.0.4.0-beta";
+	return "1.0.4";
 }
 
 const char *CS2Scrim::GetDate()
