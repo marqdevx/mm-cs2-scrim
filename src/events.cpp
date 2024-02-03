@@ -39,6 +39,9 @@ extern bool no_flash_mode;
 bool half_last_round = false;
 bool swapped_teams = false;
 
+extern bool g_bEnablePractice;
+extern bool g_bEnableCoach;
+
 void RegisterEventListeners()
 {
 	if (!g_gameEventManager)
@@ -86,12 +89,14 @@ GAME_EVENT_F(player_death){
 }
 
 GAME_EVENT_F(round_announce_last_round_half){
+	if(!g_bEnableCoach) return;
+	
 	half_last_round = true;
 }
 
 GAME_EVENT_F(round_prestart)
 {
-	if (coaches.Count() < 1) return;
+	if (coaches.Count() < 1 || g_bEnableCoach) return;
 	
 	FOR_EACH_VEC(coaches,i){
 		CCSPlayerController *pTarget = (CCSPlayerController *)g_pEntitySystem->GetBaseEntity((CEntityIndex)(coaches[i]->GetPlayerSlot() + 1));
@@ -167,7 +172,7 @@ GAME_EVENT_F(round_start)
 
 GAME_EVENT_F(round_poststart)
 {
-	if (coaches.Count() < 1) return;
+	if (coaches.Count() < 1 || !g_bEnableCoach) return;
 	
 	FOR_EACH_VEC(coaches,i){
 		CCSPlayerController *pTarget = (CCSPlayerController *)g_pEntitySystem->GetBaseEntity((CEntityIndex)(coaches[i]->GetPlayerSlot() + 1));
@@ -183,7 +188,7 @@ GAME_EVENT_F(round_poststart)
 
 GAME_EVENT_F(round_freeze_end)
 {
-	if (coaches.Count() < 1) return;
+	if (coaches.Count() < 1 || !g_bEnableCoach) return;
 	
 	FOR_EACH_VEC(coaches,i){
 		CCSPlayerController *pTarget = (CCSPlayerController *)g_pEntitySystem->GetBaseEntity((CEntityIndex)(coaches[i]->GetPlayerSlot() + 1));
@@ -213,7 +218,7 @@ GAME_EVENT_F(round_freeze_end)
 }
 
 GAME_EVENT_F(player_hurt){
-	if(!practiceMode) return;
+	if(!practiceMode || !g_bEnablePractice) return;
 
 	CCSPlayerController* pController = (CCSPlayerController *)g_pEntitySystem->GetBaseEntity((CEntityIndex)(pEvent->GetUint64("attacker") + 1));
 	
@@ -229,7 +234,7 @@ GAME_EVENT_F(player_hurt){
 }
 
 GAME_EVENT_F(player_blind){
-	if(!practiceMode) return;
+	if(!practiceMode || !g_bEnablePractice) return;
 
 	CCSPlayerController* pAttacker = (CCSPlayerController *)g_pEntitySystem->GetBaseEntity((CEntityIndex)(pEvent->GetUint64("attacker") + 1));
 	CBasePlayerController *pTarget = (CBasePlayerController *)g_pEntitySystem->GetBaseEntity((CEntityIndex)(pEvent->GetUint64("userid") + 1));
@@ -256,7 +261,7 @@ GAME_EVENT_F(player_blind){
 }
 
 GAME_EVENT_F(grenade_thrown){
-	if (!practiceMode)
+	if (!practiceMode || !g_bEnablePractice)
 		return;
 
 	CCSPlayerController* pController = (CCSPlayerController *)g_pEntitySystem->GetBaseEntity((CEntityIndex)(pEvent->GetUint64("userid") + 1));
