@@ -231,27 +231,12 @@ CON_COMMAND_CHAT(noflash, "noflash"){
 	ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "Flash mode set to \04%i", no_flash_mode);
 }
 
-CON_COMMAND_CHAT(test, "test")
-{
 	if (!player)
 		return;
-
-
-	//CBasePlayerPawn *pPawn = player->m_hPawn();
-	//pPawn->m_flFlashMaxAlpha() = 0.5f;
-//	player->GetPawn()->m_flFlashMaxAlpha = 0.5f;
-
-	CCSPlayerController* pPlayer = (CCSPlayerController *)g_pEntitySystem->GetBaseEntity((CEntityIndex)(player->GetPlayerSlot()+1));
 	
-	CCSPlayerPawnBase* cPlayerBase = (CCSPlayerPawnBase*)pPlayer->GetPawn();
-	
-	
-	cPlayerBase->m_flFlashMaxAlpha = 2;
-	ClientPrint(pPlayer, HUD_PRINTTALK, "test %i flash: %lu", cPlayerBase->m_ArmorValue(), cPlayerBase->m_flFlashMaxAlpha());
-	//pPawn->m_ArmorValue() = (int32_t)20;
+	no_flash_mode = !no_flash_mode;
 
-	int iPlayer = player->GetPlayerSlot();
-
+	ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "Flash mode set to \04%i", no_flash_mode);
 }
 
 bool match_paused = false;
