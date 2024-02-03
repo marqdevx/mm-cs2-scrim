@@ -396,6 +396,8 @@ CON_COMMAND_CHAT(spawn, "teleport to desired spawn")
 CUtlVector <CCSPlayerController*> coaches;
 
 void print_coaches(){
+	if (!g_bEnableCoach)
+		return;
 	if (coaches.Count() < 1) return;
 	
 	ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX"\5%i \1active \5coaches", coaches.Count());
@@ -493,7 +495,7 @@ CON_COMMAND_CHAT(uncoach, "Undo slot coach")
 
 CON_COMMAND_CHAT(ct, "Switch to CT side")
 {
-	if (!player)
+	if (!player || !g_bEnablePractice)
 		return;
 
 	if (!practiceMode && player->m_iTeamNum != CS_TEAM_SPECTATOR)
@@ -507,7 +509,7 @@ CON_COMMAND_CHAT(ct, "Switch to CT side")
 
 CON_COMMAND_CHAT(t, "Switch to T side")
 {
-	if (!player)
+	if (!player || !g_bEnablePractice)
 		return;
 
 	if (!practiceMode && player->m_iTeamNum != CS_TEAM_SPECTATOR)
@@ -521,7 +523,7 @@ CON_COMMAND_CHAT(t, "Switch to T side")
 
 CON_COMMAND_CHAT(spec, "Switch to Spectator")
 {
-	if (!player)
+	if (!player || !g_bEnablePractice)
 		return;
 
 	if (!practiceMode)
@@ -535,7 +537,7 @@ CON_COMMAND_CHAT(spec, "Switch to Spectator")
 
 CON_COMMAND_CHAT(side, "Switch to team selector")
 {
-	if (!player)
+	if (!player || !g_bEnablePractice)
 		return;
 
 	if (!practiceMode)
@@ -549,7 +551,7 @@ CON_COMMAND_CHAT(side, "Switch to team selector")
 
 CON_COMMAND_CHAT(last, "Teleport to the last thrown grenade")
 {
-	if (!player)
+	if (!player || !g_bEnablePractice)
 		return;
 
 	if (!practiceMode)
