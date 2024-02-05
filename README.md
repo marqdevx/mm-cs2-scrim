@@ -27,6 +27,7 @@ The plugin has been developed with these ideas in mind:
   `.pracc`: launch the practice config  
   `.scrim`: start the competitive match  
   `.map <map>`: change the map (example: `.map ancient`)  
+  `.rcon <command>`: workaround to be used as the old rcon, execute commands from server side
 
 * Scrim commands  
   `.pause`: pauses the match  
@@ -44,6 +45,7 @@ The plugin has been developed with these ideas in mind:
     `.spawn`: move to the desired competitive spawn i.e `.spawn 2` or `.spawn 1 ct`  
     `.last`: teleports to your latest thrown grenade lineup  
     `.noflash`: toggle flash effect  
+    `.ct`, `.t`, `.spec`, `.side`: switch team side  
 
 * Leveraged from [CS2Fixes](https://github.com/Source2ZE/CS2Fixes/)  
   `c_reload_admins`: console command to reload admins.cfg  
