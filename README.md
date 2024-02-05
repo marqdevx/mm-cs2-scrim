@@ -17,6 +17,10 @@ Copy the content of the file https://github.com/marqdevx/mm-cs2-scrim/blob/main/
 # Addon information
 This plugin adds the minimum requirements for competitive teams that need a more handy way of managing a few commands from the server side, like config management or replay recording.
 
+The plugin has been developed with these ideas in mind:
+1. Minimum impact on the server performance
+2. Built for competitive teams to practice (not for tournaments)
+
 ## Available Commands
 
 * Config and server management (Admin only)  
@@ -37,7 +41,9 @@ This plugin adds the minimum requirements for competitive teams that need a more
     `.forceunpause`: force the unpause  
 
 * Practice commands  
-    `.spawn`: move to the desired competitive spawn i.e `.spawn 2`  
+    `.spawn`: move to the desired competitive spawn i.e `.spawn 2` or `.spawn 1 ct`  
+    `.last`: teleports to your latest thrown grenade lineup  
+    `.noflash`: toggle flash effect  
 
 * Leveraged from [CS2Fixes](https://github.com/Source2ZE/CS2Fixes/)  
   `c_reload_admins`: console command to reload admins.cfg  
