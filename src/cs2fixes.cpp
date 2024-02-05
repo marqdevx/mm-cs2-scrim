@@ -602,7 +602,7 @@ const char *CS2Scrim::GetAuthor()
 
 const char *CS2Scrim::GetDescription()
 {
-	return "CS2Fixes port, a minimalistic plugin focused for scrim and practice";
+	return "CS2Fixes plugin port, focused on team scrims and practice and not to impact the server performance";
 }
 
 const char *CS2Scrim::GetName()
