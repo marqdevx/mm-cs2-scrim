@@ -121,7 +121,8 @@ I contacted Xen through discord before releasing this repository and he gave me 
 ### Splewis
 Almost all of the features are originally from the CS:GO plugin https://github.com/splewis/csgo-practice-mode, using it as reference. Thanks @splewis! (hope to see your work on CS2)
 
-For example the spawn workaround to get the competitive one, is checking the priority value of the spawns.
-
 ### CKRAS Hosting
 [CKRAS Hosting Team](https://www.ckras.com/en) They liked the addon, they contacted me and helped trying out the best way to create the coach, find bugs and give feedback.
+
+### Cierzo eSports team
+My teammates are being supportive by bringing feedback, ideas and testing, I mean, server crashes, toooo many server crashes ♥
