@@ -23,13 +23,15 @@
 #include "ctimer.h"
 #include "eventlistener.h"
 #include "entity/cbaseplayercontroller.h"
-#include "entity/ccsplayerpawnbase.h"
+#include "entity/cgamerules.h"
 
 #include "tier0/memdbgon.h"
 
 extern IGameEventManager2 *g_gameEventManager;
 extern IServerGameClients *g_pSource2GameClients;
-extern CEntitySystem *g_pEntitySystem;
+extern CGameEntitySystem *g_pEntitySystem;
+extern CGlobalVars *gpGlobals;
+extern CCSGameRules *g_pGameRules;
 
 CUtlVector<CGameEventListener *> g_vecEventListeners;
 
@@ -44,13 +46,17 @@ extern bool g_bEnableCoach;
 
 void RegisterEventListeners()
 {
-	if (!g_gameEventManager)
+	static bool bRegistered = false;
+
+	if (bRegistered || !g_gameEventManager)
 		return;
 
 	FOR_EACH_VEC(g_vecEventListeners, i)
 	{
 		g_gameEventManager->AddListener(g_vecEventListeners[i], g_vecEventListeners[i]->GetEventName(), true);
 	}
+
+	bRegistered = true;
 }
 
 void UnregisterEventListeners()
@@ -66,12 +72,7 @@ void UnregisterEventListeners()
 	g_vecEventListeners.Purge();
 }
 
-bool g_bBlockTeamMessages = true;
 
-CON_COMMAND_F(c_toggle_team_messages, "toggle team messages", FCVAR_SPONLY | FCVAR_LINKED_CONCOMMAND)
-{
-	g_bBlockTeamMessages = !g_bBlockTeamMessages;
-}
 
 GAME_EVENT_F(player_team)
 {	
@@ -125,27 +126,27 @@ GAME_EVENT_F(round_prestart)
 		
 		CHandle<CCSPlayerController> hController = pTarget->GetHandle();
 
-		new CTimer(0.15f, false, false, [hController, newTeam]()
+		new CTimer(0.15f, false, [hController, newTeam]()
 		{
 			CCSPlayerController *pController = hController.Get();
 
-			if(!pController) return;	//avoid crash if coach is not connected
+			if(!pController) return -1.0f;	//avoid crash if coach is not connected
 
 			pController->m_pInGameMoneyServices->m_iAccount = 0;
 
 			pController->ChangeTeam(newTeam);
 
-			new CTimer(0.0f, false, false, [hController, newTeam]()
+			new CTimer(0.0f, false, [hController, newTeam]()
 			{
 				CCSPlayerController *pController = hController.Get();
-				if(!pController) return;	//avoid crash if coach is not connected
+				if(!pController) return -1.0f;	//avoid crash if coach is not connected
 				//pController->GetPawn()->CommitSuicide(false, true);
 				pController->m_pInGameMoneyServices->m_iAccount = 0;
 				pController->m_pActionTrackingServices->m_matchStats().m_iDeaths = 0;
-				return;
+				return -1.0f;
 			});
 
-			return;
+			return -1.0f;
 		});
 		
 		if(half_last_round) half_last_round = false;
@@ -202,17 +203,17 @@ GAME_EVENT_F(round_freeze_end)
 		
 		CHandle<CCSPlayerController> hController = pTarget->GetHandle();
 		
-		new CTimer(2.0f, false, false, [hController]()
+		new CTimer(2.0f, false, [hController]()
 		{
 			CCSPlayerController *pController = hController.Get();
 
-			if(!pController) return;	//avoid crash if coach is not connected
+			if(!pController) return -2.0f;	//avoid crash if coach is not connected
 
 			int currentTeam = pController->m_iTeamNum;
 			pController->ChangeTeam(CS_TEAM_SPECTATOR);
 			pController->ChangeTeam(currentTeam);
 		
-			return;
+			return -2.0f;
 		});
 	}
 }

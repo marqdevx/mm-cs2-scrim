@@ -19,37 +19,16 @@
 
 #pragma once
 
-#include "../schema.h"
+#include "schema.h"
 #include "ccollisionproperty.h"
+#include "globaltypes.h"
+#include "ctakedamageinfo.h"
 #include "mathlib/vector.h"
 #include "ehandle.h"
+#include "entitykeyvalues.h"
 #include "../../gameconfig.h"
 
-CGlobalVars* GetGameGlobals();
-
 extern CGameConfig *g_GameConfig;
-
-class CNetworkTransmitComponent
-{
-public:
-	DECLARE_SCHEMA_CLASS_INLINE(CNetworkTransmitComponent)
-};
-
-class CNetworkOriginCellCoordQuantizedVector
-{
-public:
-	DECLARE_SCHEMA_CLASS_INLINE(CNetworkOriginCellCoordQuantizedVector)
-
-	SCHEMA_FIELD(uint16, m_cellX)
-	SCHEMA_FIELD(uint16, m_cellY)
-	SCHEMA_FIELD(uint16, m_cellZ)
-	SCHEMA_FIELD(uint16, m_nOutsideWorld)
-
-	// These are actually CNetworkedQuantizedFloat but we don't have the definition for it...
-	SCHEMA_FIELD(float, m_vecX)
-	SCHEMA_FIELD(float, m_vecY)
-	SCHEMA_FIELD(float, m_vecZ)
-};
 
 class CGameSceneNode
 {
@@ -112,6 +91,12 @@ public:
 	SCHEMA_FIELD(CGameSceneNode *, m_pSceneNode)
 };
 
+class CEntitySubclassVDataBase
+{
+public:
+	DECLARE_SCHEMA_CLASS(CEntitySubclassVDataBase)
+};
+
 class Z_CBaseEntity : public CBaseEntity
 {
 public:
@@ -127,15 +112,18 @@ public:
 	SCHEMA_FIELD(int, m_iHealth)
 	SCHEMA_FIELD(int, m_iMaxHealth)
 	SCHEMA_FIELD(int, m_iTeamNum)
+	SCHEMA_FIELD(bool, m_bLagCompensate)
 	SCHEMA_FIELD(Vector, m_vecAbsVelocity)
 	SCHEMA_FIELD(Vector, m_vecBaseVelocity)
 	SCHEMA_FIELD(CCollisionProperty*, m_pCollision)
 	SCHEMA_FIELD(MoveType_t, m_MoveType)
+	SCHEMA_FIELD(MoveType_t, m_nActualMoveType)
 	SCHEMA_FIELD(uint32, m_spawnflags)
 	SCHEMA_FIELD(uint32, m_fFlags)
 	SCHEMA_FIELD(LifeState_t, m_lifeState)
 	SCHEMA_FIELD_POINTER(CUtlStringToken, m_nSubclassID)
 	SCHEMA_FIELD(float, m_flGravityScale)
+	SCHEMA_FIELD(float, m_flSpeed)
 	SCHEMA_FIELD(CUtlString, m_sUniqueHammerID);
 
 	int entindex() { return m_pEntity->m_EHandle.GetEntryIndex(); }
@@ -145,11 +133,18 @@ public:
 	void SetAbsOrigin(Vector vecOrigin) { m_CBodyComponent->m_pSceneNode->m_vecAbsOrigin = vecOrigin; }
 	void SetAbsRotation(QAngle angAbsRotation) { m_CBodyComponent->m_pSceneNode->m_angAbsRotation = angAbsRotation; }
 
-	void Teleport(Vector *position, QAngle *angles, Vector *velocity) { static int offset = g_GameConfig->GetOffset("Teleport"); CALL_VIRTUAL(void, offset, this, position, angles, velocity); }
+	void SetAbsVelocity(Vector vecVelocity) { m_vecAbsVelocity = vecVelocity; }
+	void SetBaseVelocity(Vector vecVelocity) { m_vecBaseVelocity = vecVelocity; }
 
 	void TakeDamage(int iDamage)
 	{
 		m_iHealth = m_iHealth() - iDamage;
+	}
+
+	void Teleport(Vector *position, QAngle *angles, Vector *velocity)
+	{
+		static int offset = g_GameConfig->GetOffset("Teleport");
+		CALL_VIRTUAL(void, offset, this, position, angles, velocity);
 	}
 
 	void CollisionRulesChanged()
@@ -161,29 +156,53 @@ public:
 	bool IsPawn()
 	{
 		static int offset = g_GameConfig->GetOffset("IsEntityPawn");
-		CALL_VIRTUAL(bool, offset, this);
+		return CALL_VIRTUAL(bool, offset, this);
 	}
 
 	bool IsController()
 	{
 		static int offset = g_GameConfig->GetOffset("IsEntityController");
-		CALL_VIRTUAL(bool, offset, this);
+		return CALL_VIRTUAL(bool, offset, this);
+	}
+
+	void AcceptInput(const char *pInputName, variant_t value = variant_t(""), CEntityInstance *pActivator = nullptr, CEntityInstance *pCaller = nullptr)
+	{
+		addresses::CEntityInstance_AcceptInput(this, pInputName, pActivator, pCaller, &value, 0);
 	}
 
 	bool IsAlive() { return m_lifeState == LifeState_t::LIFE_ALIVE; }
 
 	CHandle<CBaseEntity> GetHandle() { return m_pEntity->m_EHandle; }
 
-	static Z_CBaseEntity* EntityFromHandle(CHandle<CBaseEntity> handle) {
-		if (!handle.IsValid())
-			return nullptr;
+	// A double pointer to entity VData is available 4 bytes past m_nSubclassID, if applicable
+	CEntitySubclassVDataBase* GetVData() { return *(CEntitySubclassVDataBase**)((uint8*)(m_nSubclassID()) + 4); }
 
-		auto entity = handle.Get();
+	void DispatchSpawn(CEntityKeyValues *pEntityKeyValues = nullptr)
+	{
+		addresses::DispatchSpawn(this, pEntityKeyValues);
+	}
 
-		if (entity && entity->m_pEntity->m_EHandle == handle)
-			return (Z_CBaseEntity*) entity;
+	// Emit a sound event
+	void EmitSound(const char *pszSound, int nPitch = 100, float flVolume = 1.0, float flDelay = 0.0)
+	{
+		addresses::CBaseEntity_EmitSoundParams(this, pszSound, nPitch, flVolume, flDelay);
+	}
 
-		return nullptr;
+	// This was needed so we can parent to nameless entities using pointers
+	void SetParent(Z_CBaseEntity *pNewParent)
+	{
+		addresses::CBaseEntity_SetParent(this, pNewParent, 0, nullptr);
+	}
+
+	void Remove()
+	{
+		addresses::UTIL_Remove(this);
+	}
+
+	void SetMoveType(MoveType_t nMoveType)
+	{
+		m_MoveType = nMoveType; // necessary to maintain client prediction
+		m_nActualMoveType = nMoveType;
 	}
 };
 
@@ -193,5 +212,4 @@ public:
 	DECLARE_SCHEMA_CLASS(SpawnPoint);
 
 	SCHEMA_FIELD(bool, m_bEnabled);
-	SCHEMA_FIELD(int, m_iPriority);
 };
