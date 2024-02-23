@@ -353,54 +353,6 @@ FAKE_INT_CVAR(cs2f_hide_distance_default, "The default distance for hide", g_iDe
 FAKE_INT_CVAR(cs2f_hide_distance_max, "The max distance for hide", g_iMaxHideDistance, 2000, false)
 
 
-CON_COMMAND_CHAT(hide, "<distance> - hides nearby players")
-{
-	// Silently return so the command is completely hidden
-	if (!g_bEnableHide)
-		return;
-
-	if (!player)
-	{
-		ClientPrint(player, HUD_PRINTCONSOLE, CHAT_PREFIX "You cannot use this command from the server console.");
-		return;
-	}
-
-	int distance;
-
-	if (args.ArgC() < 2)
-		distance = g_iDefaultHideDistance;
-	else
-		distance = V_StringToInt32(args[1], -1);
-
-	if (distance > g_iMaxHideDistance || distance < 0)
-	{
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "You can only hide players between 0 and %i units away.", g_iMaxHideDistance);
-		return;
-	}
-
-	int iPlayer = player->GetPlayerSlot();
-
-	ZEPlayer *pZEPlayer = g_playerManager->GetPlayer(iPlayer);
-
-	// Something has to really go wrong for this to happen
-	if (!pZEPlayer)
-	{
-		Warning("%s Tried to access a null ZEPlayer!!\n", player->GetPlayerName());
-		return;
-	}
-
-	// allows for toggling hide by turning off when hide distance matches.
-	if (pZEPlayer->GetHideDistance() == distance)
-		distance = 0;
-
-	pZEPlayer->SetHideDistance(distance);
-
-	if (distance == 0)
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "Hiding players is now disabled.");
-	else
-		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "Now hiding players within %i units.", distance);
-}
-
 CON_COMMAND_CHAT(help, "- Display list of commands in console")
 {
 	if (!player)

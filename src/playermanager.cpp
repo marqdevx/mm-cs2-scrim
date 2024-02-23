@@ -71,15 +71,6 @@ bool ZEPlayer::IsAdminFlagSet(uint64 iFlag)
 	return !iFlag || (m_iAdminFlags & iFlag);
 }
 
-int ZEPlayer::GetHideDistance()
-{
-	//return g_pUserPreferencesSystem->GetPreferenceInt(m_slot.Get(), HIDE_DISTANCE_PREF_KEY_NAME, 0);
-}
-
-void ZEPlayer::SetHideDistance(int distance)
-{
-	//g_pUserPreferencesSystem->SetPreferenceInt(m_slot.Get(), HIDE_DISTANCE_PREF_KEY_NAME, distance);
-}
 
 static bool g_bFlashLightShadows = true;
 static float g_flFlashLightDistance = 54.0f; // The minimum distance such that an awp wouldn't block the light
@@ -324,62 +315,6 @@ void CPlayerManager::FlashLightThink()
 static bool g_bHideTeammatesOnly = false;
 
 FAKE_BOOL_CVAR(cs2f_hide_teammates_only, "Whether to hide teammates only", g_bHideTeammatesOnly, false, false)
-
-void CPlayerManager::CheckHideDistances()
-{
-	if (!g_pEntitySystem)
-		return;
-
-	VPROF_ENTER_SCOPE(__FUNCTION__);
-
-	for (int i = 0; i < gpGlobals->maxClients; i++)
-	{
-		auto player = GetPlayer(i);
-
-		if (!player)
-			continue;
-
-		player->ClearTransmit();
-		auto hideDistance = player->GetHideDistance();
-
-		if (!hideDistance)
-			continue;
-
-		CCSPlayerController* pController = CCSPlayerController::FromSlot(i);
-
-		if (!pController)
-			continue;
-
-		auto pPawn = pController->GetPawn();
-
-		if (!pPawn || !pPawn->IsAlive())
-			continue;
-
-		auto vecPosition = pPawn->GetAbsOrigin();
-		int team = pController->m_iTeamNum;
-
-		for (int j = 0; j < gpGlobals->maxClients; j++)
-		{
-			if (j == i)
-				continue;
-
-			CCSPlayerController* pTargetController = CCSPlayerController::FromSlot(j);
-
-			if (pTargetController)
-			{
-				auto pTargetPawn = pTargetController->GetPawn();
-
-				// TODO: Unhide dead pawns if/when valve fixes the crash
-				if (pTargetPawn && (!g_bHideTeammatesOnly || pTargetController->m_iTeamNum == team))
-				{
-					player->SetTransmit(j, pTargetPawn->GetAbsOrigin().DistToSqr(vecPosition) <= hideDistance * hideDistance);
-				}
-			}
-		}
-	}
-
-	VPROF_EXIT_SCOPE();
-}
 
 static bool g_bInfiniteAmmo = false;
 FAKE_BOOL_CVAR(cs2f_infinite_reserve_ammo, "Whether to enable infinite reserve ammo on weapons", g_bInfiniteAmmo, false, false)
