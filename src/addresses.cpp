@@ -1,7 +1,7 @@
 /**
  * =============================================================================
  * CS2Fixes
- * Copyright (C) 2023 Source2ZE
+ * Copyright (C) 2023-2024 Source2ZE
  * =============================================================================
  *
  * This program is free software; you can redistribute it and/or modify it under
@@ -38,6 +38,7 @@ bool addresses::Initialize(CGameConfig *g_GameConfig)
 	modules::server = new CModule(GAMEBIN, "server");
 	modules::schemasystem = new CModule(ROOTBIN, "schemasystem");
 	modules::vscript = new CModule(ROOTBIN, "vscript");
+	modules::networksystem = new CModule(ROOTBIN, "networksystem");
 	modules::client = nullptr;
 
 	if (!CommandLine()->HasParm("-dedicated"))
@@ -65,6 +66,7 @@ bool addresses::Initialize(CGameConfig *g_GameConfig)
 	RESOLVE_SIG(g_GameConfig, "CGameRules_TerminateRound", addresses::CGameRules_TerminateRound);
 	RESOLVE_SIG(g_GameConfig, "CreateEntityByName", addresses::CreateEntityByName);
 	RESOLVE_SIG(g_GameConfig, "DispatchSpawn", addresses::DispatchSpawn);
+	RESOLVE_SIG(g_GameConfig, "CEntityIdentity_SetEntityName", addresses::CEntityIdentity_SetEntityName);
 	RESOLVE_SIG(g_GameConfig, "CBaseEntity_EmitSoundParams", addresses::CBaseEntity_EmitSoundParams);
 	RESOLVE_SIG(g_GameConfig, "CBaseEntity_SetParent", addresses::CBaseEntity_SetParent);
 
