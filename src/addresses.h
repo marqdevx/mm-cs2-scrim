@@ -1,7 +1,7 @@
 /**
  * =============================================================================
  * CS2Fixes
- * Copyright (C) 2023 Source2ZE
+ * Copyright (C) 2023-2024 Source2ZE
  * =============================================================================
  *
  * This program is free software; you can redistribute it and/or modify it under
@@ -32,6 +32,7 @@ namespace modules
 	inline CModule *schemasystem;
 	inline CModule *vscript;
 	inline CModule *client;
+	inline CModule* networksystem;
 #ifdef _WIN32
 	inline CModule *hammer;
 #endif
@@ -78,6 +79,7 @@ namespace addresses
 	inline void(FASTCALL *CGameRules_TerminateRound)(CGameRules* pGameRules, float delay, unsigned int reason, int64 a4, unsigned int a5);
 	inline Z_CBaseEntity *(FASTCALL* CreateEntityByName)(const char* className, int iForceEdictIndex);
 	inline void(FASTCALL* DispatchSpawn)(Z_CBaseEntity* pEntity, CEntityKeyValues *pEntityKeyValues);
+	inline void(FASTCALL* CEntityIdentity_SetEntityName)(CEntityIdentity *pEntity, const char *pName);
 	inline void(FASTCALL *CBaseEntity_EmitSoundParams)(Z_CBaseEntity *pEntity, const char *pszSound, int nPitch, float flVolume, float flDelay);
 	inline void(FASTCALL *CBaseEntity_SetParent)(Z_CBaseEntity *pEntity, Z_CBaseEntity *pNewParent, CUtlStringToken nBoneOrAttachName, matrix3x4a_t *pOffsetTransform);
 }
