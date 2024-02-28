@@ -613,15 +613,6 @@ void CS2Fixes::Hook_CheckTransmit(CCheckTransmitInfo **ppInfoList, int infoCount
 			if (!pController || !pController->IsConnected() || j == iPlayerSlot)
 				continue;
 
-			CBarnLight *pFlashLight = g_playerManager->GetPlayer(j)->GetFlashLight();
-
-			// Don't transmit other players' flashlights
-			if (pFlashLight)
-				pInfo->m_pTransmitEntity->Clear(pFlashLight->entindex());
-
-			if (!g_bEnableHide)
-				continue;
-
 			auto pPawn = pController->GetPawn();
 
 			if (!pPawn)

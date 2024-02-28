@@ -33,6 +33,6 @@ public:
 	
 	void SetModel(const char *szModel)
 	{
-		addresses::CBaseModelEntity_SetModel(this, szModel);
+		//addresses::CBaseModelEntity_SetModel(this, szModel);
 	}
 };

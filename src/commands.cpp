@@ -562,6 +562,79 @@ CON_COMMAND_CHAT(unpause, "Request unpause")
 	g_pEngineServer2->ServerCommand("mp_unpause_match");
 }
 
+
+CON_COMMAND_CHAT(ct, "Switch to CT side")
+{
+	if (!player || !g_bEnablePractice)
+		return;
+
+	if (!practiceMode && player->m_iTeamNum != CS_TEAM_SPECTATOR)
+	{
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "Switch teams only available on .pracc mode");
+		return;
+	}
+
+	player->ChangeTeam(CS_TEAM_CT);
+}
+
+CON_COMMAND_CHAT(t, "Switch to T side")
+{
+	if (!player || !g_bEnablePractice)
+		return;
+
+	if (!practiceMode && player->m_iTeamNum != CS_TEAM_SPECTATOR)
+	{
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "Switch teams only available on .pracc mode");
+		return;
+	}
+
+	player->ChangeTeam(CS_TEAM_T);
+}
+
+CON_COMMAND_CHAT(spec, "Switch to Spectator")
+{
+	if (!player || !g_bEnablePractice)
+		return;
+
+	if (!practiceMode)
+	{
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "Switch teams only available on .pracc mode");
+		return;
+	}
+
+	player->ChangeTeam(CS_TEAM_SPECTATOR);
+}
+
+CON_COMMAND_CHAT(side, "Switch to team selector")
+{
+	if (!player || !g_bEnablePractice)
+		return;
+
+	if (!practiceMode)
+	{
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "Switch teams only available on .pracc mode");
+		return;
+	}
+
+	player->ChangeTeam(CS_TEAM_NONE);
+}
+
+CON_COMMAND_CHAT(last, "Teleport to the last thrown grenade")
+{
+	if (!player || !g_bEnablePractice)
+		return;
+
+	if (!practiceMode)
+	{
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "Last grenade teleport only available on .pracc mode");
+		return;
+	}
+
+	ZEPlayer *pPlayer = g_playerManager->GetPlayer(player->GetPlayerSlot());
+	
+	player->GetPawn()->Teleport(&pPlayer->lastThrow_position, &pPlayer->lastThrow_rotation, nullptr);
+}
+
 //DEBUG
 #if _DEBUG
 CON_COMMAND_CHAT(myuid, "- test")
@@ -585,48 +658,6 @@ CON_COMMAND_CHAT(myhandle, "test")
 	ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "entry index: %d    serial number: %d", entry, serial);
 }
 
-CON_COMMAND_CHAT(fl, "flashlight")
-{
-	if (!player)
-		return;
-
-	CCSPlayerPawn *pPawn = (CCSPlayerPawn *)player->GetPawn();
-
-	auto ptr = pPawn->m_pMovementServices->m_nButtons().m_pButtonStates();
-
-	Vector origin = pPawn->GetAbsOrigin();
-	Vector forward;
-	AngleVectors(pPawn->m_angEyeAngles(), &forward);
-
-	origin.z += 64.0f;
-	origin += forward * 54.0f; // The minimum distance such that an awp wouldn't block the light
-
-	CBarnLight *pLight = (CBarnLight *)CreateEntityByName("light_barn");
-
-	pLight->m_bEnabled = true;
-	pLight->m_Color->SetColor(255, 255, 255, 255);
-	pLight->m_flBrightness = 1.0f;
-	pLight->m_flRange = 2048.0f;
-	pLight->m_flSoftX = 1.0f;
-	pLight->m_flSoftY = 1.0f;
-	pLight->m_flSkirt = 0.5f;
-	pLight->m_flSkirtNear = 1.0f;
-	pLight->m_vSizeParams->Init(45.0f, 45.0f, 0.03f);
-	pLight->m_nCastShadows = 1;
-	pLight->m_nDirectLight = 3;
-	pLight->Teleport(&origin, &pPawn->m_angEyeAngles(), nullptr);
-
-	// Have to use keyvalues for this since the schema prop is a resource handle
-	CEntityKeyValues *pKeyValues = new CEntityKeyValues();
-	pKeyValues->SetString("lightcookie", "materials/effects/lightcookies/flashlight.vtex");
-
-	pLight->DispatchSpawn(pKeyValues);
-
-	variant_t val("!player");
-	pLight->AcceptInput("SetParent", &val);
-	variant_t val2("clip_limit");
-	pLight->AcceptInput("SetParentAttachmentMaintainOffset", &val2);
-}
 
 CON_COMMAND_CHAT(message, "<id> <message> - message someone")
 {
@@ -724,47 +755,7 @@ CON_COMMAND_CHAT(setorigin, "<vector> - set your origin")
 	ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX"Your origin is now %f %f %f", vecNewOrigin.x, vecNewOrigin.y, vecNewOrigin.z);
 }
 
-CON_COMMAND_CHAT(particle, "spawn a particle")
-{
-	if (!player)
-		return;
 
-	Vector vecAbsOrigin = player->GetPawn()->GetAbsOrigin();
-	vecAbsOrigin.z += 64.0f;
-
-	CParticleSystem *particle = (CParticleSystem*)CreateEntityByName("info_particle_system");
-
-	particle->m_bStartActive(true);
-	particle->m_iszEffectName(args[1]);
-	particle->Teleport(&vecAbsOrigin, nullptr, nullptr);
-
-	particle->DispatchSpawn();
-
-	ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "You have spawned a particle with effect name: %s", particle->m_iszEffectName().String());
-	Message("You have spawned a particle with effect name: %s\n", particle->m_iszEffectName().String());
-}
-
-CON_COMMAND_CHAT(particle_kv, "spawn a particle but using keyvalues to spawn")
-{
-	if (!player)
-		return;
-
-	Vector vecAbsOrigin = player->GetPawn()->GetAbsOrigin();
-	vecAbsOrigin.z += 64.0f;
-
-	CParticleSystem *particle = (CParticleSystem *)CreateEntityByName("info_particle_system");
-
-	CEntityKeyValues *pKeyValues = new CEntityKeyValues();
-
-	pKeyValues->SetString("effect_name", args[1]);
-	pKeyValues->SetBool("start_active", true);
-	pKeyValues->SetVector("origin", vecAbsOrigin);
-
-	particle->DispatchSpawn(pKeyValues);
-
-	ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "You have spawned a particle using keyvalues with effect name: %s", particle->m_iszEffectName().String());
-	Message("You have spawned a particle using keyvalues with effect name: %s\n", particle->m_iszEffectName().String());
-}
 
 CON_COMMAND_CHAT(emitsound, "emit a sound from the entity under crosshair")
 {

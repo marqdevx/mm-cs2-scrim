@@ -67,13 +67,11 @@ GS_EVENT_MEMBER(CGameSystem, BuildGameSessionManifest)
 	// Any resource adding MUST be done here, the resource manifest is not long-lived
 	// pResourceManifest->AddResource("characters/models/my_character_model.vmdl");
 
-	//ZR_Precache(pResourceManifest);
-	//PrecacheAdminBeaconParticle(pResourceManifest);
 }
 
 // Called every frame before entities think
 GS_EVENT_MEMBER(CGameSystem, ServerPreEntityThink)
 {
 	// This could've gone into CS2Fixes::Hook_GameFrame but I've kept it here as an example
-	g_playerManager->FlashLightThink();
+	//g_playerManager->FlashLightThink();
 }

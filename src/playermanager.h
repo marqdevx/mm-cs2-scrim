@@ -72,10 +72,7 @@ public:
 
 	~ZEPlayer()
 	{
-		CBarnLight *pFlashLight = m_hFlashLight.Get();
-
-		if (pFlashLight)
-			pFlashLight->Remove();
+		
 	}
 
 	bool IsFakeClient() { return m_bFakeClient; }
@@ -111,8 +108,7 @@ public:
 	void SetInGame(bool bInGame) { m_bInGame = bInGame; }
 	void SetImmunity(int iMZImmunity) { m_iMZImmunity = iMZImmunity; }
 	void SetNominateTime(float flCurtime) { m_flNominateTime = flCurtime; }
-	void SetFlashLight(CBarnLight *pLight) { m_hFlashLight.Set(pLight); }
-	void SetBeaconParticle(CParticleSystem *pParticle) { m_hBeaconParticle.Set(pParticle); }
+
 
 	bool IsMuted() { return m_bMuted; }
 	bool IsGagged() { return m_bGagged; }
@@ -130,14 +126,12 @@ public:
 	bool IsInGame() { return m_bInGame; }
 	int GetImmunity() { return m_iMZImmunity; }
 	float GetNominateTime() { return m_flNominateTime; }
-	CBarnLight *GetFlashLight() { return m_hFlashLight.Get(); }
-	CParticleSystem *GetBeaconParticle() { return m_hBeaconParticle.Get(); }
 	
 	void OnAuthenticated();
 	void CheckAdmin();
 	void CheckInfractions();
-	void SpawnFlashLight();
-	void ToggleFlashLight();
+
+	
 
 	Vector lastThrow_position;
 	QAngle lastThrow_rotation;
@@ -169,8 +163,7 @@ private:
 	bool m_bInGame;
 	int m_iMZImmunity;
 	float m_flNominateTime;
-	CHandle<CBarnLight> m_hFlashLight;
-	CHandle<CParticleSystem> m_hBeaconParticle;
+
 };
 
 class CPlayerManager
@@ -194,7 +187,7 @@ public:
 	void OnLateLoad();
 	void TryAuthenticate();
 	void CheckInfractions();
-	void FlashLightThink();
+
 	void SetupInfiniteAmmo();
 	CPlayerSlot GetSlotFromUserId(uint16 userid);
 	ZEPlayer *GetPlayerFromUserId(uint16 userid);

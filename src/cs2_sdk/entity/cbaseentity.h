@@ -167,7 +167,7 @@ public:
 
 	void AcceptInput(const char *pInputName, variant_t value = variant_t(""), CEntityInstance *pActivator = nullptr, CEntityInstance *pCaller = nullptr)
 	{
-		addresses::CEntityInstance_AcceptInput(this, pInputName, pActivator, pCaller, &value, 0);
+		//addresses::CEntityInstance_AcceptInput(this, pInputName, pActivator, pCaller, &value, 0);
 	}
 
 	bool IsAlive() { return m_lifeState == LifeState_t::LIFE_ALIVE; }
@@ -179,7 +179,7 @@ public:
 
 	void DispatchSpawn(CEntityKeyValues *pEntityKeyValues = nullptr)
 	{
-		addresses::DispatchSpawn(this, pEntityKeyValues);
+		//addresses::DispatchSpawn(this, pEntityKeyValues);
 	}
 
 	// Emit a sound event

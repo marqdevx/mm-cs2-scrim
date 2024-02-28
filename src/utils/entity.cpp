@@ -63,9 +63,9 @@ Z_CBaseEntity* CreateEntityByName(const char* className)
 {
 	return addresses::CreateEntityByName(className, -1);
 }
-
+/*
 void UTIL_AddEntityIOEvent(CEntityInstance *pTarget, const char *pszInput,
 						   CEntityInstance *pActivator, CEntityInstance *pCaller, variant_t value, float flDelay)
 {
 	addresses::CEntitySystem_AddEntityIOEvent(g_pEntitySystem, pTarget, pszInput, pActivator, pCaller, &value, flDelay, 0);
-}
+}*/
