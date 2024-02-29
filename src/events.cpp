@@ -97,11 +97,11 @@ GAME_EVENT_F(round_announce_last_round_half){
 
 GAME_EVENT_F(round_prestart)
 {
-	if (coaches.Count() < 1 || g_bEnableCoach) return;
-	
+	if (coaches.Count() < 1 || !g_bEnableCoach) return;
+
 	FOR_EACH_VEC(coaches,i){
-		CCSPlayerController *pTarget = (CCSPlayerController *)g_pEntitySystem->GetBaseEntity((CEntityIndex)(coaches[i]->GetPlayerSlot() + 1));
-		
+		CCSPlayerController *pTarget = CCSPlayerController::FromSlot(coaches[i]->GetPlayerSlot());
+
 		if(!pTarget) return;	//avoid crash if coach is not connected
 		//ClientPrint(pTarget, HUD_PRINTTALK, "coach slot  side %i", coaches[i]->m_iTeamNum());
 
@@ -113,7 +113,7 @@ GAME_EVENT_F(round_prestart)
 		pTarget->ChangeTeam(CS_TEAM_SPECTATOR);
 
 		//pTarget->GetPawn()->CommitSuicide(false, true);
-		
+
 		if(half_last_round && !swapped_teams){
 			if(currentTeam == CS_TEAM_CT){
 				newTeam = CS_TEAM_T;
@@ -123,7 +123,7 @@ GAME_EVENT_F(round_prestart)
 		}else{
 				newTeam = currentTeam;
 		}
-		
+
 		CHandle<CCSPlayerController> hController = pTarget->GetHandle();
 
 		new CTimer(0.15f, false, [hController, newTeam]()
@@ -146,9 +146,9 @@ GAME_EVENT_F(round_prestart)
 				return -1.0f;
 			});
 
-			return -1.0f;
+			return -0.15f;
 		});
-		
+
 		if(half_last_round) half_last_round = false;
 	}
 }
@@ -158,7 +158,7 @@ GAME_EVENT_F(round_start)
 	if (coaches.Count() < 1) return;
 	
 	FOR_EACH_VEC(coaches,i){
-		CCSPlayerController *pTarget = (CCSPlayerController *)g_pEntitySystem->GetBaseEntity((CEntityIndex)(coaches[i]->GetPlayerSlot() + 1));
+		CCSPlayerController *pTarget = CCSPlayerController::FromSlot(coaches[i]->GetPlayerSlot());
 
 		coaches[i]->m_pInGameMoneyServices->m_iAccount = 0;
 
@@ -176,7 +176,7 @@ GAME_EVENT_F(round_poststart)
 	if (coaches.Count() < 1 || !g_bEnableCoach) return;
 	
 	FOR_EACH_VEC(coaches,i){
-		CCSPlayerController *pTarget = (CCSPlayerController *)g_pEntitySystem->GetBaseEntity((CEntityIndex)(coaches[i]->GetPlayerSlot() + 1));
+		CCSPlayerController *pTarget = CCSPlayerController::FromSlot(coaches[i]->GetPlayerSlot());
 
 		coaches[i]->m_pInGameMoneyServices->m_iAccount = 0;
 		
@@ -192,8 +192,8 @@ GAME_EVENT_F(round_freeze_end)
 	if (coaches.Count() < 1 || !g_bEnableCoach) return;
 	
 	FOR_EACH_VEC(coaches,i){
-		CCSPlayerController *pTarget = (CCSPlayerController *)g_pEntitySystem->GetBaseEntity((CEntityIndex)(coaches[i]->GetPlayerSlot() + 1));
-		
+		CCSPlayerController *pTarget = CCSPlayerController::FromSlot(coaches[i]->GetPlayerSlot());
+
 		if(!pTarget) return;	//avoid crash if coach is not connected
 
 		int currentTeam = pTarget->m_iTeamNum;
