@@ -50,15 +50,15 @@ extern CCSGameRules *g_pGameRules;
 
 DECLARE_DETOUR(UTIL_SayTextFilter, Detour_UTIL_SayTextFilter);
 DECLARE_DETOUR(UTIL_SayText2Filter, Detour_UTIL_SayText2Filter);
-DECLARE_DETOUR(IsHearingClient, Detour_IsHearingClient);
+//DECLARE_DETOUR(IsHearingClient, Detour_IsHearingClient);
 DECLARE_DETOUR(CSoundEmitterSystem_EmitSound, Detour_CSoundEmitterSystem_EmitSound);
-DECLARE_DETOUR(TriggerPush_Touch, Detour_TriggerPush_Touch);
+//DECLARE_DETOUR(TriggerPush_Touch, Detour_TriggerPush_Touch);
 DECLARE_DETOUR(CGameRules_Constructor, Detour_CGameRules_Constructor);
-DECLARE_DETOUR(CBaseEntity_TakeDamageOld, Detour_CBaseEntity_TakeDamageOld);
+//DECLARE_DETOUR(CBaseEntity_TakeDamageOld, Detour_CBaseEntity_TakeDamageOld);
 DECLARE_DETOUR(CCSPlayer_WeaponServices_CanUse, Detour_CCSPlayer_WeaponServices_CanUse);
-DECLARE_DETOUR(CEntityIdentity_AcceptInput, Detour_CEntityIdentity_AcceptInput);
-DECLARE_DETOUR(CNavMesh_GetNearestNavArea, Detour_CNavMesh_GetNearestNavArea);
-DECLARE_DETOUR(FixLagCompEntityRelationship, Detour_FixLagCompEntityRelationship);
+//DECLARE_DETOUR(CEntityIdentity_AcceptInput, Detour_CEntityIdentity_AcceptInput);
+//DECLARE_DETOUR(CNavMesh_GetNearestNavArea, Detour_CNavMesh_GetNearestNavArea);
+//DECLARE_DETOUR(FixLagCompEntityRelationship, Detour_FixLagCompEntityRelationship);
 
 void FASTCALL Detour_CGameRules_Constructor(CGameRules *pThis)
 {
@@ -72,128 +72,12 @@ static bool g_bBlockAllDamage = false;
 FAKE_BOOL_CVAR(cs2f_block_molotov_self_dmg, "Whether to block self-damage from molotovs", g_bBlockMolotovSelfDmg, false, false)
 FAKE_BOOL_CVAR(cs2f_block_all_dmg, "Whether to block all damage to players", g_bBlockAllDamage, false, false)
 
-void FASTCALL Detour_CBaseEntity_TakeDamageOld(Z_CBaseEntity *pThis, CTakeDamageInfo *inputInfo)
-{
-#ifdef _DEBUG
-	Message("\n--------------------------------\n"
-			"TakeDamage on %s\n"
-			"Attacker: %s\n"
-			"Inflictor: %s\n"
-			"Ability: %s\n"
-			"Damage: %.2f\n"
-			"Damage Type: %i\n"
-			"--------------------------------\n",
-			pThis->GetClassname(),
-			inputInfo->m_hAttacker.Get() ? inputInfo->m_hAttacker.Get()->GetClassname() : "NULL",
-			inputInfo->m_hInflictor.Get() ? inputInfo->m_hInflictor.Get()->GetClassname() : "NULL",
-			inputInfo->m_hAbility.Get() ? inputInfo->m_hAbility.Get()->GetClassname() : "NULL",
-			inputInfo->m_flDamage,
-			inputInfo->m_bitsDamageType);
-#endif
-	
-	// Block all player damage if desired
-	if (g_bBlockAllDamage && pThis->IsPawn())
-		return;
-
-	CBaseEntity *pInflictor = inputInfo->m_hInflictor.Get();
-	const char *pszInflictorClass = pInflictor ? pInflictor->GetClassname() : "";
-
-	// Prevent everything but nades from inflicting blast damage
-	if (inputInfo->m_bitsDamageType == DamageTypes_t::DMG_BLAST && V_strncmp(pszInflictorClass, "hegrenade", 9))
-		inputInfo->m_bitsDamageType = DamageTypes_t::DMG_GENERIC;
-
-
-	// Prevent molly on self
-	if (g_bBlockMolotovSelfDmg && inputInfo->m_hAttacker == pThis && !V_strncmp(pszInflictorClass, "inferno", 7))
-		return;
-
-	CBaseEntity_TakeDamageOld(pThis, inputInfo);
-}
-
-static bool g_bUseOldPush = false;
-
-FAKE_BOOL_CVAR(cs2f_use_old_push, "Whether to use the old CSGO trigger_push behavior", g_bUseOldPush, false, false)
-
-void FASTCALL Detour_TriggerPush_Touch(CTriggerPush* pPush, Z_CBaseEntity* pOther)
-{
-	// This trigger pushes only once (and kills itself) or pushes only on StartTouch, both of which are fine already
-	if (!g_bUseOldPush || pPush->m_spawnflags() & SF_TRIG_PUSH_ONCE || pPush->m_bTriggerOnStartTouch())
-	{
-		TriggerPush_Touch(pPush, pOther);
-		return;
-	}
-
-	MoveType_t movetype = pOther->m_nActualMoveType();
-
-	// VPhysics handling doesn't need any changes
-	if (movetype == MOVETYPE_VPHYSICS)
-	{
-		TriggerPush_Touch(pPush, pOther);
-		return;
-	}
-
-	if (movetype == MOVETYPE_NONE || movetype == MOVETYPE_PUSH || movetype == MOVETYPE_NOCLIP)
-		return;
-
-	CCollisionProperty* collisionProp = pOther->m_pCollision();
-	if (!IsSolid(collisionProp->m_nSolidType(), collisionProp->m_usSolidFlags()))
-		return;
-
-	if (!pPush->PassesTriggerFilters(pOther))
-		return;
-
-	if (pOther->m_CBodyComponent()->m_pSceneNode()->m_pParent())
-		return;
-
-	Vector vecAbsDir;
-
-	matrix3x4_t mat = pPush->m_CBodyComponent()->m_pSceneNode()->EntityToWorldTransform();
-	
-	Vector pushDir = pPush->m_vecPushDirEntitySpace();
-
-	// i had issues with vectorrotate on linux so i did it here
-	vecAbsDir.x = pushDir.x * mat[0][0] + pushDir.y * mat[0][1] + pushDir.z * mat[0][2];
-	vecAbsDir.y = pushDir.x * mat[1][0] + pushDir.y * mat[1][1] + pushDir.z * mat[1][2];
-	vecAbsDir.z = pushDir.x * mat[2][0] + pushDir.y * mat[2][1] + pushDir.z * mat[2][2];
-
-	Vector vecPush = vecAbsDir * pPush->m_flSpeed();
-
-	uint32 flags = pOther->m_fFlags();
-
-	if (flags & (FL_BASEVELOCITY))
-	{
-		vecPush = vecPush + pOther->m_vecBaseVelocity();
-	}
-
-	if (vecPush.z > 0 && (flags & FL_ONGROUND))
-	{
-		addresses::SetGroundEntity(pOther, nullptr);
-		Vector origin = pOther->GetAbsOrigin();
-		origin.z += 1.0f;
-
-		pOther->Teleport(&origin, nullptr, nullptr);
-	}
-
-	pOther->m_vecBaseVelocity(vecPush);
-
-	flags |= (FL_BASEVELOCITY);
-	pOther->m_fFlags(flags);
-}
-
 void FASTCALL Detour_CSoundEmitterSystem_EmitSound(ISoundEmitterSystemBase *pSoundEmitterSystem, CEntityIndex *a2, IRecipientFilter &filter, uint32 a4, void *a5)
 {
 	//ConMsg("Detour_CSoundEmitterSystem_EmitSound\n");
 	CSoundEmitterSystem_EmitSound(pSoundEmitterSystem, a2, filter, a4, a5);
 }
 
-bool FASTCALL Detour_IsHearingClient(void* serverClient, int index)
-{
-	ZEPlayer* player = g_playerManager->GetPlayer(index);
-	if (player && player->IsMuted())
-		return false;
-
-	return IsHearingClient(serverClient, index);
-}
 
 void SayChatMessageWithTimer(IRecipientFilter &filter, const char *pText, CCSPlayerController *pPlayer, uint64 eMessageType)
 {
@@ -383,36 +267,6 @@ bool FASTCALL Detour_CCSPlayer_WeaponServices_CanUse(CCSPlayer_WeaponServices *p
 	return CCSPlayer_WeaponServices_CanUse(pWeaponServices, pPlayerWeapon);
 }
 
-void FASTCALL Detour_CEntityIdentity_AcceptInput(CEntityIdentity* pThis, CUtlSymbolLarge* pInputName, CEntityInstance* pActivator, CEntityInstance* pCaller, variant_t* value, int nOutputID)
-{
-	
-	return CEntityIdentity_AcceptInput(pThis, pInputName, pActivator, pCaller, value, nOutputID);
-}
-
-bool g_bBlockNavLookup = false;
-
-FAKE_BOOL_CVAR(cs2f_block_nav_lookup, "Whether to block navigation mesh lookup, improves server performance but breaks bot navigation", g_bBlockNavLookup, false, false)
-
-void* FASTCALL Detour_CNavMesh_GetNearestNavArea(int64_t unk1, float* unk2, unsigned int* unk3, unsigned int unk4, int64_t unk5, int64_t unk6, float unk7, int64_t unk8)
-{
-	if (g_bBlockNavLookup)
-		return nullptr;
-
-	return CNavMesh_GetNearestNavArea(unk1, unk2, unk3, unk4, unk5, unk6, unk7, unk8);
-}
-
-bool g_bFixLagCompCrash = false;
-
-FAKE_BOOL_CVAR(cs2f_fix_lag_comp_crash, "Whether to fix lag compensation crash with env_entity_maker", g_bFixLagCompCrash, false, false)
-
-void FASTCALL Detour_FixLagCompEntityRelationship(void *a1, CEntityInstance *pEntity, bool a3)
-{
-	if (g_bFixLagCompCrash && strcmp(pEntity->GetClassname(), "env_entity_maker") == 0)
-		return;
-
-	return FixLagCompEntityRelationship(a1, pEntity, a3);
-}
-
 CUtlVector<CDetourBase *> g_vecDetours;
 
 bool InitDetours(CGameConfig *gameConfig)
@@ -435,41 +289,19 @@ bool InitDetours(CGameConfig *gameConfig)
 		success = false;
 	UTIL_SayText2Filter.EnableDetour();
 
-	if (!IsHearingClient.CreateDetour(gameConfig))
-		success = false;
-	IsHearingClient.EnableDetour();
-
 	if (!CSoundEmitterSystem_EmitSound.CreateDetour(gameConfig))
 		success = false;
 	CSoundEmitterSystem_EmitSound.EnableDetour();
-
-	if (!TriggerPush_Touch.CreateDetour(gameConfig))
-		success = false;
-	TriggerPush_Touch.EnableDetour();
 
 	if (!CGameRules_Constructor.CreateDetour(gameConfig))
 		success = false;
 	CGameRules_Constructor.EnableDetour();
 
-	if (!CBaseEntity_TakeDamageOld.CreateDetour(gameConfig))
-		success = false;
-	CBaseEntity_TakeDamageOld.EnableDetour();
-
 	if (!CCSPlayer_WeaponServices_CanUse.CreateDetour(gameConfig))
 		success = false;
 	CCSPlayer_WeaponServices_CanUse.EnableDetour();
   
-	if (!CEntityIdentity_AcceptInput.CreateDetour(gameConfig))
-		success = false;
-	CEntityIdentity_AcceptInput.EnableDetour();
 
-	if (!CNavMesh_GetNearestNavArea.CreateDetour(gameConfig))
-		success = false;
-	CNavMesh_GetNearestNavArea.EnableDetour();
-
-	if (!FixLagCompEntityRelationship.CreateDetour(gameConfig))
-		success = false;
-	FixLagCompEntityRelationship.EnableDetour();
 
 	return success;
 }

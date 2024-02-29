@@ -33,22 +33,16 @@ extern CGameConfig *g_GameConfig;
 
 CMemPatch g_CommonPatches[] =
 {
-	CMemPatch("ServerMovementUnlock", "ServerMovementUnlock"),
-	CMemPatch("VScriptEnable", "VScriptEnable"),
-	CMemPatch("CheckJumpButtonWater", "FixWaterFloorJump"),
-	CMemPatch("CategorizeUnderwater", "CategorizeUnderwater"),
-	CMemPatch("WaterLevelGravity", "WaterLevelGravity"),
-	CMemPatch("BotNavIgnore", "BotNavIgnore"),
+	
 #ifndef _WIN32
 	// Linux checks for the nav mesh in each bot_add command, so we patch 3 times
-	CMemPatch("BotNavIgnore", "BotNavIgnore"),
-	CMemPatch("BotNavIgnore", "BotNavIgnore"),
+
 #endif
 };
 
 CMemPatch g_ClientPatches[] =
 {
-	CMemPatch("ClientMovementUnlock", "ClientMovementUnlock"),
+	//CMemPatch("ClientMovementUnlock", "ClientMovementUnlock"),
 };
 
 #ifdef _WIN32
@@ -57,37 +51,10 @@ CMemPatch g_ToolsPatches[] =
 	// Remove some -nocustomermachine checks without needing -nocustomermachine itself
 	// as it can break stuff like the asset browser. This is mainly to enable device selection in compiles
 	// And yes, it's the exact same signature appearing 4 times, each unhides a certain hammer compile option
-	CMemPatch("HammerNoCustomerMachine", "HammerNoCustomerMachine"),
-	CMemPatch("HammerNoCustomerMachine", "HammerNoCustomerMachine"),
-	CMemPatch("HammerNoCustomerMachine", "HammerNoCustomerMachine"),
-	CMemPatch("HammerNoCustomerMachine", "HammerNoCustomerMachine"),
+	
 };
 #endif
 
-// CONVAR_TODO
-bool g_bEnableMovementUnlocker = true;
-
-CON_COMMAND_F(cs2f_movement_unlocker_enable, "Whether to enable movement unlocker", FCVAR_LINKED_CONCOMMAND | FCVAR_SPONLY)
-{
-	if (args.ArgC() < 2)
-	{
-		Msg("%s %i\n", args[0], g_bEnableMovementUnlocker);
-		return;
-	}
-
-	bool bOld = g_bEnableMovementUnlocker;
-
-	g_bEnableMovementUnlocker = V_StringToBool(args[1], false);
-
-	if (g_bEnableMovementUnlocker != bOld)
-	{
-		// Movement unlocker is always the first patch
-		if (g_bEnableMovementUnlocker)
-			g_CommonPatches[0].PerformPatch(g_GameConfig);
-		else
-			g_CommonPatches[0].UndoPatch();
-	}
-}
 
 bool InitPatches(CGameConfig *g_GameConfig)
 {

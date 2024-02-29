@@ -46,7 +46,7 @@ void CEntityListener::OnEntitySpawned(CEntityInstance* pEntity)
 
 void CEntityListener::OnEntityCreated(CEntityInstance* pEntity)
 {
-	ExecuteOnce(Patch_GetHammerUniqueId(pEntity));
+	//ExecuteOnce(Patch_GetHammerUniqueId(pEntity));
 }
 
 void CEntityListener::OnEntityDeleted(CEntityInstance* pEntity)

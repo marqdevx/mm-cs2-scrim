@@ -110,7 +110,7 @@ SH_DECL_HOOK6(IServerGameClients, ClientConnect, SH_NOATTRIB, 0, bool, CPlayerSl
 SH_DECL_HOOK8_void(IGameEventSystem, PostEventAbstract, SH_NOATTRIB, 0, CSplitScreenSlot, bool, int, const uint64*,
 	INetworkSerializable*, const void*, unsigned long, NetChannelBufType_t)
 SH_DECL_HOOK3_void(INetworkServerService, StartupServer, SH_NOATTRIB, 0, const GameSessionConfiguration_t&, ISource2WorldSession*, const char*);
-SH_DECL_HOOK6_void(ISource2GameEntities, CheckTransmit, SH_NOATTRIB, 0, CCheckTransmitInfo **, int, CBitVec<16384> &, const Entity2Networkable_t **, const uint16 *, int);
+
 SH_DECL_HOOK2_void(IServerGameClients, ClientCommand, SH_NOATTRIB, 0, CPlayerSlot, const CCommand &);
 SH_DECL_HOOK3_void(ICvar, DispatchConCommand, SH_NOATTRIB, 0, ConCommandHandle, const CCommandContext&, const CCommand&);
 
@@ -170,7 +170,7 @@ bool CS2Fixes::Load(PluginId id, ISmmAPI *ismm, char *error, size_t maxlen, bool
 	SH_ADD_HOOK_MEMFUNC(IServerGameClients, ClientCommand, g_pSource2GameClients, this, &CS2Fixes::Hook_ClientCommand, false);
 	SH_ADD_HOOK_MEMFUNC(IGameEventSystem, PostEventAbstract, g_gameEventSystem, this, &CS2Fixes::Hook_PostEvent, false);
 	SH_ADD_HOOK_MEMFUNC(INetworkServerService, StartupServer, g_pNetworkServerService, this, &CS2Fixes::Hook_StartupServer, true);
-	SH_ADD_HOOK_MEMFUNC(ISource2GameEntities, CheckTransmit, g_pSource2GameEntities, this, &CS2Fixes::Hook_CheckTransmit, true);
+
 	SH_ADD_HOOK_MEMFUNC(ICvar, DispatchConCommand, g_pCVar, this, &CS2Fixes::Hook_DispatchConCommand, false);
 
 	META_CONPRINTF( "All hooks started!\n" );
@@ -286,7 +286,7 @@ bool CS2Fixes::Unload(char *error, size_t maxlen)
 	SH_REMOVE_HOOK_MEMFUNC(IServerGameClients, ClientCommand, g_pSource2GameClients, this, &CS2Fixes::Hook_ClientCommand, false);
 	SH_REMOVE_HOOK_MEMFUNC(IGameEventSystem, PostEventAbstract, g_gameEventSystem, this, &CS2Fixes::Hook_PostEvent, false);
 	SH_REMOVE_HOOK_MEMFUNC(INetworkServerService, StartupServer, g_pNetworkServerService, this, &CS2Fixes::Hook_StartupServer, true);
-	SH_REMOVE_HOOK_MEMFUNC(ISource2GameEntities, CheckTransmit, g_pSource2GameEntities, this, &CS2Fixes::Hook_CheckTransmit, true);
+
 	SH_REMOVE_HOOK_MEMFUNC(ICvar, DispatchConCommand, g_pCVar, this, &CS2Fixes::Hook_DispatchConCommand, false);
 
 	ConVar_Unregister();
@@ -572,56 +572,6 @@ void CS2Fixes::Hook_GameFrame( bool simulating, bool bFirstTick, bool bLastTick 
 			{
 				timer->m_flLastExecute = g_flUniversalTime;
 			}
-		}
-	}
-
-	VPROF_EXIT_SCOPE();
-}
-
-void CS2Fixes::Hook_CheckTransmit(CCheckTransmitInfo **ppInfoList, int infoCount, CBitVec<16384> &unionTransmitEdicts,
-								const Entity2Networkable_t **pNetworkables, const uint16 *pEntityIndicies, int nEntities)
-{
-	if (!g_pEntitySystem)
-		return;
-
-	VPROF_ENTER_SCOPE(__FUNCTION__);
-
-	for (int i = 0; i < infoCount; i++)
-	{
-		auto &pInfo = ppInfoList[i];
-
-		// the offset happens to have a player index here,
-		// though this is probably part of the client class that contains the CCheckTransmitInfo
-		static int offset = g_GameConfig->GetOffset("CheckTransmitPlayerSlot");
-		int iPlayerSlot = (int)*((uint8 *)pInfo + offset);
-
-		CCSPlayerController* pSelfController = CCSPlayerController::FromSlot(iPlayerSlot);
-
-		if (!pSelfController || !pSelfController->IsConnected())
-			continue;
-
-		auto pSelfZEPlayer = g_playerManager->GetPlayer(iPlayerSlot);
-
-		if (!pSelfZEPlayer)
-			continue;
-
-		for (int j = 0; j < gpGlobals->maxClients; j++)
-		{
-			CCSPlayerController* pController = CCSPlayerController::FromSlot(j);
-
-			// Always transmit to themselves
-			if (!pController || !pController->IsConnected() || j == iPlayerSlot)
-				continue;
-
-			auto pPawn = pController->GetPawn();
-
-			if (!pPawn)
-				continue;
-
-			// Hide players marked as hidden or ANY dead player, it seems that a ragdoll of a previously hidden player can crash?
-			// TODO: Revert this if/when valve fixes the issue?
-			if (pSelfZEPlayer->ShouldBlockTransmit(j) || pPawn->m_lifeState != LIFE_ALIVE)
-				pInfo->m_pTransmitEntity->Clear(pPawn->entindex());
 		}
 	}
 
