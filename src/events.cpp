@@ -140,7 +140,7 @@ GAME_EVENT_F(round_prestart)
 			{
 				CCSPlayerController *pController = hController.Get();
 				if(!pController) return -1.0f;	//avoid crash if coach is not connected
-				//pController->GetPawn()->CommitSuicide(false, true);
+				pController->GetPawn()->CommitSuicide(false, true);
 				pController->m_pInGameMoneyServices->m_iAccount = 0;
 				pController->m_pActionTrackingServices->m_matchStats().m_iDeaths = 0;
 				return -1.0f;
