@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <Filter Include="Source Files">
@@ -12,14 +12,8 @@
     <Filter Include="Source Files\cs2_sdk">
       <UniqueIdentifier>{65f1f5a2-6411-4f21-9255-37d1b9e5b449}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\cs2_sdk\interfaces">
-      <UniqueIdentifier>{904ca200-d5b9-430e-9eff-66ebfe1cdccc}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Header Files\cs2_sdk">
       <UniqueIdentifier>{70b0b6c3-5a23-41ae-a865-ed4a40a45e1a}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Header Files\cs2_sdk\interfaces">
-      <UniqueIdentifier>{b61ccd3e-b790-406a-ac1f-f4bb89286896}</UniqueIdentifier>
     </Filter>
     <Filter Include="Header Files\cs2_sdk\entity">
       <UniqueIdentifier>{184daee7-8d1e-48eb-9b2c-159792ecff61}</UniqueIdentifier>
@@ -33,6 +27,9 @@
     <Filter Include="Header Files\utils">
       <UniqueIdentifier>{4e7c9b65-faee-46b5-b610-9717f232a17c}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\sdk">
+      <UniqueIdentifier>{e1906f3f-9ee2-40df-a4d2-00ee0358b050}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\patches.cpp">
@@ -43,12 +40,6 @@
     </ClCompile>
     <ClCompile Include="src\mempatch.cpp">
       <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="sdk\tier1\convar.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\cs2_sdk\interfaces\cs2_interfaces.cpp">
-      <Filter>Source Files\cs2_sdk\interfaces</Filter>
     </ClCompile>
     <ClCompile Include="src\addresses.cpp">
       <Filter>Source Files</Filter>
@@ -64,9 +55,6 @@
     </ClCompile>
     <ClCompile Include="src\utils\plat_unix.cpp">
       <Filter>Source Files\utils</Filter>
-    </ClCompile>
-    <ClCompile Include="src\cs2_sdk\interfaces\centitysystem.cpp">
-      <Filter>Source Files\cs2_sdk\interfaces</Filter>
     </ClCompile>
     <ClCompile Include="src\commands.cpp">
       <Filter>Source Files</Filter>
@@ -84,13 +72,52 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\utils\entity.cpp">
-      <Filter>Source Files\cs2_sdk\entity</Filter>
+      <Filter>Source Files\utils</Filter>
     </ClCompile>
     <ClCompile Include="src\events.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\gameconfig.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\tier1\convar.cpp">
+      <Filter>Source Files\sdk</Filter>
+    </ClCompile>
+    <ClCompile Include="src\httpmanager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\votemanager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\discord.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\map_votes.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\user_preferences.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\entity2\entitysystem.cpp">
+      <Filter>Source Files\sdk</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\entity2\entityidentity.cpp">
+      <Filter>Source Files\sdk</Filter>
+    </ClCompile>
+    <ClCompile Include="src\gamesystem.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\zombiereborn.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\entitylistener.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\tier1\keyvalues3.cpp">
+      <Filter>Source Files\sdk</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\entity2\entitykeyvalues.cpp">
+      <Filter>Source Files\sdk</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -100,12 +127,6 @@
     <ClInclude Include="src\common.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\cs2_sdk\interfaces\cs2_interfaces.h">
-      <Filter>Header Files\cs2_sdk\interfaces</Filter>
-    </ClInclude>
-    <ClInclude Include="src\cs2_sdk\interfaces\cgameresourceserviceserver.h">
-      <Filter>Header Files\cs2_sdk\interfaces</Filter>
-    </ClInclude>
     <ClInclude Include="src\cs2_sdk\entity\cbaseentity.h">
       <Filter>Header Files\cs2_sdk\entity</Filter>
     </ClInclude>
@@ -114,9 +135,6 @@
     </ClInclude>
     <ClInclude Include="src\utils\module.h">
       <Filter>Header Files\utils</Filter>
-    </ClInclude>
-    <ClInclude Include="src\cs2_sdk\interfaces\cschemasystem.h">
-      <Filter>Header Files\cs2_sdk\interfaces</Filter>
     </ClInclude>
     <ClInclude Include="src\utils\virtual.h">
       <Filter>Header Files\utils</Filter>
@@ -140,12 +158,6 @@
       <Filter>Header Files\cs2_sdk\entity</Filter>
     </ClInclude>
     <ClInclude Include="src\cs2_sdk\entity\ccollisionproperty.h">
-      <Filter>Header Files\cs2_sdk\entity</Filter>
-    </ClInclude>
-    <ClInclude Include="src\cs2_sdk\entity\centityidentity.h">
-      <Filter>Header Files\cs2_sdk\entity</Filter>
-    </ClInclude>
-    <ClInclude Include="src\cs2_sdk\entity\cglowproperty.h">
       <Filter>Header Files\cs2_sdk\entity</Filter>
     </ClInclude>
     <ClInclude Include="src\cs2_sdk\entity\cbasemodelentity.h">
@@ -175,9 +187,6 @@
     <ClInclude Include="src\recipientfilters.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\utils\entity.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="src\adminsystem.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -186,6 +195,51 @@
     </ClInclude>
     <ClInclude Include="src\eventlistener.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\httpmanager.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\votemanager.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\zombiereborn.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\cs2_sdk\entity\globaltypes.h">
+      <Filter>Header Files\cs2_sdk\entity</Filter>
+    </ClInclude>
+    <ClInclude Include="src\cs2_sdk\entity\cgamerules.h">
+      <Filter>Header Files\cs2_sdk\entity</Filter>
+    </ClInclude>
+    <ClInclude Include="src\utils\entity.h">
+      <Filter>Header Files\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="src\cs2_sdk\entity\ctakedamageinfo.h">
+      <Filter>Header Files\cs2_sdk\entity</Filter>
+    </ClInclude>
+    <ClInclude Include="src\discord.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\gamesystem.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\gameconfig.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\map_votes.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\user_preferences.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\entitylistener.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\cs2_sdk\entity\lights.h">
+      <Filter>Header Files\cs2_sdk\entity</Filter>
+    </ClInclude>
+    <ClInclude Include="src\cs2_sdk\entity\cparticlesystem.h">
+      <Filter>Header Files\cs2_sdk\entity</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

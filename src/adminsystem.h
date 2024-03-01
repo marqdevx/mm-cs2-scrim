@@ -23,36 +23,49 @@
 #include "playermanager.h"
 #include <ctime>
 
-#define ADMFLAG_RESERVATION			(1<<0)		/**< Convenience macro for Admin_Reservation as a FlagBit */
-#define ADMFLAG_GENERIC				(1<<1)		/**< Convenience macro for Admin_Generic as a FlagBit */
-#define ADMFLAG_KICK				(1<<2)		/**< Convenience macro for Admin_Kick as a FlagBit */
-#define ADMFLAG_BAN					(1<<3)		/**< Convenience macro for Admin_Ban as a FlagBit */
-#define ADMFLAG_UNBAN				(1<<4)		/**< Convenience macro for Admin_Unban as a FlagBit */
-#define ADMFLAG_SLAY				(1<<5)		/**< Convenience macro for Admin_Slay as a FlagBit */
-#define ADMFLAG_CHANGEMAP			(1<<6)		/**< Convenience macro for Admin_Changemap as a FlagBit */
-#define ADMFLAG_CONVARS				(1<<7)		/**< Convenience macro for Admin_Convars as a FlagBit */
-#define ADMFLAG_CONFIG				(1<<8)		/**< Convenience macro for Admin_Config as a FlagBit */
-#define ADMFLAG_CHAT				(1<<9)		/**< Convenience macro for Admin_Chat as a FlagBit */
-#define ADMFLAG_VOTE				(1<<10)		/**< Convenience macro for Admin_Vote as a FlagBit */
-#define ADMFLAG_PASSWORD			(1<<11)		/**< Convenience macro for Admin_Password as a FlagBit */
-#define ADMFLAG_RCON				(1<<12)		/**< Convenience macro for Admin_RCON as a FlagBit */
-#define ADMFLAG_CHEATS				(1<<13)		/**< Convenience macro for Admin_Cheats as a FlagBit */
-#define ADMFLAG_ROOT				(1<<14)		/**< Convenience macro for Admin_Root as a FlagBit */
-#define ADMFLAG_CUSTOM1				(1<<15)		/**< Convenience macro for Admin_Custom1 as a FlagBit */
-#define ADMFLAG_CUSTOM2				(1<<16)		/**< Convenience macro for Admin_Custom2 as a FlagBit */
-#define ADMFLAG_CUSTOM3				(1<<17)		/**< Convenience macro for Admin_Custom3 as a FlagBit */
-#define ADMFLAG_CUSTOM4				(1<<18)		/**< Convenience macro for Admin_Custom4 as a FlagBit */
-#define ADMFLAG_CUSTOM5				(1<<19)		/**< Convenience macro for Admin_Custom5 as a FlagBit */
-#define ADMFLAG_CUSTOM6				(1<<20)		/**< Convenience macro for Admin_Custom6 as a FlagBit */
+#define ADMFLAG_NONE		(0)
+#define ADMFLAG_RESERVATION (1 << 0)  // a
+#define ADMFLAG_GENERIC		(1 << 1)  // b
+#define ADMFLAG_KICK		(1 << 2)  // c
+#define ADMFLAG_BAN			(1 << 3)  // d
+#define ADMFLAG_UNBAN		(1 << 4)  // e
+#define ADMFLAG_SLAY		(1 << 5)  // f
+#define ADMFLAG_CHANGEMAP	(1 << 6)  // g
+#define ADMFLAG_CONVARS		(1 << 7)  // h
+#define ADMFLAG_CONFIG		(1 << 8)  // i
+#define ADMFLAG_CHAT		(1 << 9)  // j
+#define ADMFLAG_VOTE		(1 << 10) // k
+#define ADMFLAG_PASSWORD	(1 << 11) // l
+#define ADMFLAG_RCON		(1 << 12) // m
+#define ADMFLAG_CHEATS		(1 << 13) // n
+#define ADMFLAG_CUSTOM1		(1 << 14) // o
+#define ADMFLAG_CUSTOM2		(1 << 15) // p
+#define ADMFLAG_CUSTOM3		(1 << 16) // q
+#define ADMFLAG_CUSTOM4		(1 << 17) // r
+#define ADMFLAG_CUSTOM5		(1 << 18) // s
+#define ADMFLAG_CUSTOM6		(1 << 19) // t
+#define ADMFLAG_CUSTOM7		(1 << 20) // u
+#define ADMFLAG_CUSTOM8		(1 << 21) // v
+#define ADMFLAG_CUSTOM9		(1 << 22) // w
+#define ADMFLAG_CUSTOM10	(1 << 23) // x
+#define ADMFLAG_CUSTOM11	(1 << 24) // y
+#define ADMFLAG_ROOT		(1 << 25) // z
 
+#define ADMIN_PREFIX "Admin %s has "
+
+void PrintSingleAdminAction(const char* pszAdminName, const char* pszTargetName, const char* pszAction, const char* pszAction2, const char* prefix);
+void PrintMultiAdminAction(ETargetType nType, const char* pszAdminName, const char* pszAction, const char* pszAction2, const char* prefix);
 
 class CInfractionBase
 {
 public:
-	CInfractionBase(int duration, uint64 steamId) : m_iSteamID(steamId)
+	CInfractionBase(time_t duration, uint64 steamId, bool bEndTime = false) : m_iSteamID(steamId)
 	{
 		// The duration is in minutes here
-		m_iTimestamp = duration != 0 ? std::time(nullptr) + (duration * 60) : 0;
+		if (!bEndTime)
+			m_iTimestamp = duration != 0 ? std::time(nullptr) + (duration * 60) : 0;
+		else
+			m_iTimestamp = duration;
 	}
 	enum EInfractionType
 	{
@@ -64,11 +77,11 @@ public:
 	virtual EInfractionType GetType() = 0;
 	virtual void ApplyInfraction(ZEPlayer*) = 0;
 	virtual void UndoInfraction(ZEPlayer *) = 0;
-	int GetTimestamp() { return m_iTimestamp; }
+	time_t GetTimestamp() { return m_iTimestamp; }
 	uint64 GetSteamId64() { return m_iSteamID; }
 
 private:
-	int m_iTimestamp;
+	time_t m_iTimestamp;
 	uint64 m_iSteamID;
 };
 
@@ -137,12 +150,11 @@ public:
 	bool FindAndRemoveInfraction(ZEPlayer *player, CInfractionBase::EInfractionType type);
 	bool FindAndRemoveInfraction(uint64 iSteamID, CInfractionBase::EInfractionType type);
 	CAdmin *FindAdmin(uint64 iSteamID);
-
-private:
 	uint64 ParseFlags(const char* pszFlags);
 
+private:
 	CUtlVector<CAdmin> m_vecAdmins;
 	CUtlVector<CInfractionBase*> m_vecInfractions;
 };
 
-extern CAdminSystem* g_pAdminSystem;
+extern CAdminSystem *g_pAdminSystem;

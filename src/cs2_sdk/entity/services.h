@@ -19,8 +19,9 @@
 
 #pragma once
 #include <platform.h>
-
-#include "../schema.h"
+#include "globaltypes.h"
+#include <entity/ccsweaponbase.h>
+#include <entity/ccsplayerpawn.h>
 
 class CBaseEntity;
 
@@ -39,6 +40,8 @@ struct CSMatchStats_t : public CSPerRoundStats_t
 {
 public:
 	DECLARE_SCHEMA_CLASS_INLINE(CSMatchStats_t)
+
+	SCHEMA_FIELD(int32_t, m_iEntryWins);
 };
 
 class CCSPlayerController_ActionTrackingServices
@@ -53,6 +56,65 @@ class CPlayer_MovementServices
 {
 public:
 	DECLARE_SCHEMA_CLASS(CPlayer_MovementServices);
+
+	SCHEMA_FIELD(CInButtonState, m_nButtons)
+	SCHEMA_FIELD(uint64_t, m_nQueuedButtonDownMask)
+	SCHEMA_FIELD(uint64_t, m_nQueuedButtonChangeMask)
+	SCHEMA_FIELD(uint64_t, m_nButtonDoublePressed)
+
+	// m_pButtonPressedCmdNumber[64]
+	SCHEMA_FIELD_POINTER(uint32_t, m_pButtonPressedCmdNumber)
+	SCHEMA_FIELD(uint32_t, m_nLastCommandNumberProcessed)
+	SCHEMA_FIELD(uint64_t, m_nToggleButtonDownMask)
+	SCHEMA_FIELD(float, m_flMaxspeed)
+};
+
+class CPlayerPawnComponent
+{
+public:
+	DECLARE_SCHEMA_CLASS(CPlayerPawnComponent);
+
+	SCHEMA_FIELD(CCSPlayerPawn*, __m_pChainEntity)
+};
+
+class CPlayer_WeaponServices : public CPlayerPawnComponent
+{
+public:
+	DECLARE_SCHEMA_CLASS(CPlayer_WeaponServices);
+
+	SCHEMA_FIELD_POINTER(CUtlVector<CHandle<CBasePlayerWeapon>>, m_hMyWeapons)
+	SCHEMA_FIELD(CHandle<CBasePlayerWeapon>, m_hActiveWeapon)
+};
+
+class CCSPlayer_WeaponServices : public CPlayer_WeaponServices
+{
+public:
+	DECLARE_SCHEMA_CLASS(CCSPlayer_WeaponServices);
+
+	SCHEMA_FIELD(GameTime_t, m_flNextAttack)
+	SCHEMA_FIELD(bool, m_bIsLookingAtWeapon)
+	SCHEMA_FIELD(bool, m_bIsHoldingLookAtWeapon)
+
+	SCHEMA_FIELD(CHandle<CBasePlayerWeapon>, m_hSavedWeapon)
+	SCHEMA_FIELD(int32_t, m_nTimeToMelee)
+	SCHEMA_FIELD(int32_t, m_nTimeToSecondary)
+	SCHEMA_FIELD(int32_t, m_nTimeToPrimary)
+	SCHEMA_FIELD(int32_t, m_nTimeToSniperRifle)
+	SCHEMA_FIELD(bool, m_bIsBeingGivenItem)
+	SCHEMA_FIELD(bool, m_bIsPickingUpItemWithUse)
+	SCHEMA_FIELD(bool, m_bPickedUpWeapon)
+};
+
+class CPlayer_MovementServices_Humanoid : CPlayer_MovementServices
+{
+public:
+	DECLARE_SCHEMA_CLASS(CPlayer_MovementServices_Humanoid);
+};
+
+class CCSPlayer_MovementServices : CPlayer_MovementServices_Humanoid
+{
+public:
+	DECLARE_SCHEMA_CLASS(CCSPlayer_MovementServices);
 };
 
 class CCSPlayerController_InGameMoneyServices
@@ -88,6 +150,8 @@ private:
 public:
 	virtual bool GiveNamedItemBool(const char* pchName) = 0;
 	virtual CBaseEntity* GiveNamedItem(const char* pchName) = 0;
+	virtual void DropPlayerWeapon(CBasePlayerWeapon* weapon) = 0;
+	virtual void StripPlayerWeapons() = 0;
 };
 
 // We need an exactly sized class to be able to iterate the vector, our schema system implementation can't do this

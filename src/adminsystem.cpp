@@ -26,13 +26,22 @@
 #include "playermanager.h"
 #include "commands.h"
 #include "ctimer.h"
+#include "detours.h"
+
+#include "utils/entity.h"
+#include "entity/cbaseentity.h"
+#include "entity/cparticlesystem.h"
+#include "entity/cgamerules.h"
+#include "gamesystem.h"
+#include <vector>
 
 extern IVEngineServer2 *g_pEngineServer2;
-extern CEntitySystem *g_pEntitySystem;
+extern CGameEntitySystem *g_pEntitySystem;
+extern CGlobalVars *gpGlobals;
+extern CCSGameRules *g_pGameRules;
 
 CAdminSystem* g_pAdminSystem = nullptr;
 
-CUtlMap<uint32, FnChatCommandCallback_t> g_CommandList(0, 0, DefLessFunc(uint32));
 
 bool practiceMode = false;
 bool no_flash_mode = false;
@@ -40,10 +49,8 @@ extern CUtlVector <CCSPlayerController*> coaches;
 extern void print_coaches();
 extern bool half_last_round;
 char level_name[256];	//Map name workaround for demo names, only when .map has been triggered
+CUtlMap<uint32, CChatCommand *> g_CommandList(0, 0, DefLessFunc(uint32));
 
-#define ADMIN_PREFIX "Admin %s has "
-
-//CVARS
 extern bool g_bEnableBan;
 extern bool g_bEnableCoach;
 extern bool g_bEnableGag;
@@ -59,12 +66,34 @@ extern bool g_bEnableSlay;
 extern bool g_bEnableTeamControl;
 extern bool g_bEnableTeleport;
 
+
+void PrintSingleAdminAction(const char* pszAdminName, const char* pszTargetName, const char* pszAction, const char* pszAction2 = "", const char* prefix = CHAT_PREFIX)
+{
+	ClientPrintAll(HUD_PRINTTALK, "%s" ADMIN_PREFIX "%s %s%s.", prefix, pszAdminName, pszAction, pszTargetName, pszAction2);
+}
+
+void PrintMultiAdminAction(ETargetType nType, const char* pszAdminName, const char* pszAction, const char* pszAction2 = "", const char* prefix = CHAT_PREFIX)
+{
+	switch (nType)
+	{
+	case ETargetType::ALL:
+		ClientPrintAll(HUD_PRINTTALK, "%s" ADMIN_PREFIX "%s everyone%s.", prefix, pszAdminName, pszAction, pszAction2);
+		break;
+	case ETargetType::T:
+		ClientPrintAll(HUD_PRINTTALK, "%s" ADMIN_PREFIX "%s terrorists%s.", prefix, pszAdminName, pszAction, pszAction2);
+		break;
+	case ETargetType::CT:
+		ClientPrintAll(HUD_PRINTTALK, "%s" ADMIN_PREFIX "%s counter-terrorists%s.", prefix, pszAdminName, pszAction, pszAction2);
+		break;
+	}
+}
+
 CON_COMMAND_F(c_reload_admins, "Reload admin config", FCVAR_SPONLY | FCVAR_LINKED_CONCOMMAND)
 {
 	if (!g_pAdminSystem->LoadAdmins())
 		return;
 
-	for (int i = 0; i < MAXPLAYERS; i++)
+	for (int i = 0; i < gpGlobals->maxClients; i++)
 	{
 		ZEPlayer* pPlayer = g_playerManager->GetPlayer(i);
 
@@ -75,24 +104,6 @@ CON_COMMAND_F(c_reload_admins, "Reload admin config", FCVAR_SPONLY | FCVAR_LINKE
 	}
 
 	Message("Admins reloaded\n");
-}
-
-CON_COMMAND_F(c_reload_infractions, "Reload infractions file", FCVAR_SPONLY | FCVAR_LINKED_CONCOMMAND)
-{
-	if (!g_pAdminSystem->LoadInfractions())
-		return;
-
-	for (int i = 0; i < MAXPLAYERS; i++)
-	{
-		ZEPlayer* pPlayer = g_playerManager->GetPlayer(i);
-
-		if (!pPlayer || pPlayer->IsFakeClient())
-			continue;
-
-		pPlayer->CheckInfractions();
-	}
-
-	Message("Infractions reloaded\n");
 }
 
 CON_COMMAND_CHAT(rcon, "fake rcon")
@@ -1167,9 +1178,10 @@ CON_COMMAND_CHAT(map, "change map")
 
 	ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX"Changing map to %s...", args[1]);
 
-	new CTimer(5.0f, false, false, [buf]()
+	new CTimer(5.0f, false, [buf]()
 	{
 		g_pEngineServer2->ServerCommand(buf);
+		return -5.0f;
 	});
 	
 	

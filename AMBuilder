@@ -26,21 +26,26 @@ for sdk_name in MMSPlugin.sdks:
       os.path.join(builder.sourcePath, 'vendor', 'subhook'),
       os.path.join(builder.sourcePath, 'vendor', 'funchook', 'include'),
       os.path.join(builder.sourcePath, 'vendor', 'protobuf-3.21.8', 'src'),
+      os.path.join(builder.sourcePath, 'protobuf', 'generated'),
     ]
+
+    target_folder = 'Debug' if builder.options.debug else 'Release'
+    target_protobuf = 'libprotobufd' if builder.options.debug else 'libprotobuf'
 
     if binary.compiler.target.platform == 'linux':
       binary.compiler.postlink += [
-        os.path.join(builder.sourcePath, 'vendor', 'funchook', 'lib', 'libfunchook.a'),
-        os.path.join(builder.sourcePath, 'vendor', 'funchook', 'lib', 'libdistorm.a'),
-        os.path.join(builder.sourcePath, 'vendor', 'protobuf-lib', 'libprotobuf.a'),
+        os.path.join(builder.sourcePath, 'vendor', 'funchook', 'lib', target_folder, 'libfunchook.a'),
+        os.path.join(builder.sourcePath, 'vendor', 'funchook', 'lib', target_folder, 'libdistorm.a'),
+        os.path.join(builder.sourcePath, 'vendor', 'protobuf-lib', target_folder, target_protobuf + '.a'),
       ]
       binary.sources += ['src/utils/plat_unix.cpp']
     elif binary.compiler.target.platform == 'windows':
       binary.compiler.postlink += [
         os.path.join('psapi.lib'),
-        os.path.join(builder.sourcePath, 'vendor', 'funchook', 'lib', 'funchook.lib'),
-        os.path.join(builder.sourcePath, 'vendor', 'funchook', 'lib', 'distorm.lib'),
-        os.path.join(builder.sourcePath, 'vendor', 'protobuf-lib', 'libprotobuf.lib'),
+        os.path.join(builder.sourcePath, 'vendor', 'funchook', 'lib', target_folder, 'funchook.lib'),
+        os.path.join(builder.sourcePath, 'vendor', 'funchook', 'lib', target_folder, 'distorm.lib'),
+        os.path.join(builder.sourcePath, 'vendor', 'protobuf-lib', target_folder, target_protobuf + '.lib'),
+		    os.path.join(builder.sourcePath, 'sdk', 'lib', 'public', 'win64', 'steam_api64.lib')
       ]
       binary.sources += ['src/utils/plat_win.cpp']
 
@@ -50,25 +55,32 @@ for sdk_name in MMSPlugin.sdks:
       'src/mempatch.cpp',
       'src/patches.cpp',
       'src/cvars.cpp',
-	    'src/adminsystem.cpp',
+      'src/adminsystem.cpp',
       'src/commands.cpp',
       'src/addresses.cpp',
       'src/detours.cpp',
       'src/events.cpp',
       'src/utils/entity.cpp',
       'src/cs2_sdk/schema.cpp',
-      'src/cs2_sdk/interfaces/cs2_interfaces.cpp',
-      'src/cs2_sdk/interfaces/centitysystem.cpp',
       'src/ctimer.cpp',
       'src/playermanager.cpp',
       'src/gameconfig.cpp',
+      'src/gamesystem.cpp',
+      'src/entitylistener.cpp',
     ]
 
     if sdk_name in ['dota', 'cs2']:
       binary.sources += [
+      os.path.join(sdk.path, 'entity2', 'entitysystem.cpp'),
+      os.path.join(sdk.path, 'entity2', 'entityidentity.cpp'),
+      os.path.join(sdk.path, 'entity2', 'entitykeyvalues.cpp'),
       os.path.join(sdk.path, 'tier1', 'convar.cpp'),
-      os.path.join(sdk.path, 'tier1', 'generichash.cpp'),
-      os.path.join(sdk.path, 'public', 'tier0', 'memoverride.cpp'),
+      os.path.join(sdk.path, 'tier1', 'keyvalues3.cpp'),
+    ]
+
+    if sdk_name in ['dota', 'cs2'] and (binary.compiler.target.platform == 'windows' and builder.options.debug != '1') or binary.compiler.target.platform == 'linux':
+      binary.sources += [
+      os.path.join(sdk.path, 'public', 'tier0', 'memoverride.cpp')
     ]
 
     if cxx.target.arch == 'x86':

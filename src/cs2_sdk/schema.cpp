@@ -20,11 +20,14 @@
 #include "schema.h"
 
 #include "../common.h"
-#include "interfaces/cs2_interfaces.h"
+#include "cschemasystem.h"
 #include "tier1/utlmap.h"
 #include "tier0/memdbgon.h"
 #include "plat.h"
 #include "entity/cbaseentity.h"
+
+extern CSchemaSystem *g_pSchemaSystem2;
+extern CGlobalVars *gpGlobals;
 
 using SchemaKeyValueMap_t = CUtlMap<uint32_t, SchemaKey>;
 using SchemaTableMap_t = CUtlMap<uint32_t, SchemaKeyValueMap_t*>;
@@ -44,7 +47,7 @@ static bool IsFieldNetworked(SchemaClassFieldData_t& field)
 
 static bool InitSchemaFieldsForClass(SchemaTableMap_t *tableMap, const char* className, uint32_t classKey)
 {
-    CSchemaSystemTypeScope* pType = interfaces::pSchemaSystem->FindTypeScopeForModule(MODULE_PREFIX "server" MODULE_EXT);
+    CSchemaSystemTypeScope* pType = g_pSchemaSystem2->FindTypeScopeForModule(MODULE_PREFIX "server" MODULE_EXT);
 
     if (!pType)
         return false;
@@ -72,10 +75,10 @@ static bool InitSchemaFieldsForClass(SchemaTableMap_t *tableMap, const char* cla
         SchemaClassFieldData_t& field = pFields[i];
 
 #ifdef _DEBUG
-        Message("%s::%s found at -> 0x%X - %llx\n", className, field.m_name, field.m_offset, &field);
+		Message("%s::%s found at -> 0x%X - %llx\n", className, field.m_name, field.m_single_inheritance_offset, &field);
 #endif
 
-        keyValueMap->Insert(hash_32_fnv1a_const(field.m_name), { field.m_offset, IsFieldNetworked(field) });
+        keyValueMap->Insert(hash_32_fnv1a_const(field.m_name), {field.m_single_inheritance_offset, IsFieldNetworked(field)});
     }
 
     return true;
@@ -83,7 +86,7 @@ static bool InitSchemaFieldsForClass(SchemaTableMap_t *tableMap, const char* cla
 
 int16_t schema::FindChainOffset(const char* className)
 {
-    CSchemaSystemTypeScope* pType = interfaces::pSchemaSystem->FindTypeScopeForModule(MODULE_PREFIX "server" MODULE_EXT);
+    CSchemaSystemTypeScope* pType = g_pSchemaSystem2->FindTypeScopeForModule(MODULE_PREFIX "server" MODULE_EXT);
 
     if (!pType)
         return false;
@@ -100,7 +103,7 @@ int16_t schema::FindChainOffset(const char* className)
 
             if (V_strcmp(field.m_name, "__m_pChainEntity") == 0)
             {
-                return field.m_offset;
+                return field.m_single_inheritance_offset;
             }
         }
     } while ((pClassInfo = pClassInfo->GetParent()) != nullptr);
@@ -133,11 +136,8 @@ SchemaKey schema::GetOffset(const char* className, uint32_t classKey, const char
 
 void SetStateChanged(Z_CBaseEntity* pEntity, int offset)
 {
-	addresses::StateChanged(pEntity->m_NetworkTransmitComponent(), pEntity, offset, -1, -1);
-	auto vars = GetGameGlobals();
-
-    if (vars)
-	    pEntity->m_lastNetworkChange = vars->curtime;
-
-	pEntity->m_isSteadyState().ClearAll();
+    addresses::StateChanged(pEntity->m_NetworkTransmitComponent(), pEntity, offset, -1, -1);
+	
+    pEntity->m_lastNetworkChange = gpGlobals->curtime;
+    pEntity->m_isSteadyState().ClearAll();
 };
