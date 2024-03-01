@@ -559,7 +559,7 @@ CON_COMMAND_CHAT(spawn, "teleport to desired spawn")
 
 	pPawn->SetAbsOrigin(spawnpos);
 
-	ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX"You have been teleported to spawn. %i/%i priority:%i", spawnIndex +1, totalSpawns, spawn_priority);			
+	ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX"You have been teleported to spawn. %i/%i", spawnIndex +1, totalSpawns);			
 }
 
 CUtlVector <CCSPlayerController*> coaches;
