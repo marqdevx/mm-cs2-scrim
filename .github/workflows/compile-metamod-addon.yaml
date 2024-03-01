@@ -4,14 +4,15 @@ on:
   - pull_request
 
 env:
-  HL2SDKCS2: /home/runner/work/mm-cs2-scrim/mm-cs2-scrim/sdk
-  MMSOURCE_DEV: /home/runner/work/mm-cs2-scrim/mm-cs2-scrim/metamod-source
+  HL2SDKCS2: /__w/mm-cs2-scrim/mm-cs2-scrim/sdk
+  MMSOURCE_DEV: /__w/mm-cs2-scrim/mm-cs2-scrim/metamod-source
   CC: clang
   CXX: clang++
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    container: registry.gitlab.steamos.cloud/steamrt/sniper/sdk
        
     steps:
       - name: Checkout
@@ -42,7 +43,7 @@ jobs:
           ls -la
       - name: Update submodules
         run: |
-          cd /home/runner/work/mm-cs2-scrim/mm-cs2-scrim/metamod-source
+          cd metamod-source
           git submodule update --recursive
           
       - name: Compile
@@ -57,9 +58,9 @@ jobs:
           sudo apt-get install python3 -y
           sudo apt-get install gcc -y
           echo ---
-          cd /home/runner/work/mm-cs2-scrim/mm-cs2-scrim/ambuild && sudo python3 ./setup.py install
+          cd ambuild && sudo python3 ./setup.py install
           ls -la
-          cd /home/runner/work/mm-cs2-scrim/mm-cs2-scrim
+          cd ../
           ls -la
-          mkdir build && cd build && python3 ../configure.py --enable-optimize --symbol-files --sdks cs2
+          mkdir build && cd build && python3 ../configure.py --sdks cs2 --targets x86_64
           ambuild

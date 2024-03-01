@@ -8,23 +8,34 @@ export MMSOURCE_DEV='/dockerVolume/metamod-source'
 export CC=clang
 export CXX=clang++
 
+clear
+
 echo --------------------------------------------------------------------------
 echo Starting steam sniper compilator for metamod
 echo
 
-apt-get update
-apt-get install python3-setuptools -y
-apt-get install clang -y
-apt-get install python3 -y
-apt-get install gcc -y
+if [ "$(which "ambuild")" != "" ]; 
+then
+    echo "AMBUILD installed"
+else
+    echo "Installing ambuild"
+    
+    apt-get update
+    apt-get install python3-setuptools -y
+    apt-get install clang -y
+    apt-get install python3 -y
+    apt-get install gcc -y
 
-cd "/dockerVolume/ambuild"
-python3 setup.py install
+    cd "/dockerVolume/ambuild" && python3 setup.py install
+
+    echo "AMBUILD Installed"
+fi
 
 cd "/dockerVolume/mm-cs2-scrim"
 mkdir build
 cd build
 
+#python ../configure.py --enable-optimize --symbol-files --sdks cs2
 python3 ../configure.py --sdks cs2 --targets x86_64
 ambuild
 

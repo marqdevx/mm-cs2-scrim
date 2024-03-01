@@ -21,7 +21,16 @@
 
 #include "cbaseplayerpawn.h"
 
-class CCSPlayerPawn : public CBasePlayerPawn
+class CCSPlayerPawnBase : public CBasePlayerPawn
+{
+public:
+	DECLARE_SCHEMA_CLASS(CCSPlayerPawnBase);
+	SCHEMA_FIELD(QAngle, m_angEyeAngles)
+	SCHEMA_FIELD(float, m_flVelocityModifier)
+	SCHEMA_FIELD(float, m_flFlashMaxAlpha)
+};
+
+class CCSPlayerPawn : public CCSPlayerPawnBase
 {
 public:
 	DECLARE_SCHEMA_CLASS(CCSPlayerPawn);

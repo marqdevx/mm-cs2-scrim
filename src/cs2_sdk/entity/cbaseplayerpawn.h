@@ -29,13 +29,23 @@ public:
 	DECLARE_SCHEMA_CLASS(CBasePlayerPawn);
 
 	SCHEMA_FIELD(CPlayer_MovementServices*, m_pMovementServices)
-	SCHEMA_FIELD(uint8*, m_pWeaponServices)
+	SCHEMA_FIELD(CPlayer_WeaponServices*, m_pWeaponServices)
 	SCHEMA_FIELD(CCSPlayer_ItemServices*, m_pItemServices)
 	SCHEMA_FIELD(CHandle<CBasePlayerController>, m_hController)
+
+	void TakeDamage(int iDamage)
+	{
+		if (m_iHealth() - iDamage <= 0)
+			CommitSuicide(false, true);
+		else
+			Z_CBaseEntity::TakeDamage(iDamage);
+	}
 
 	void CommitSuicide(bool bExplode, bool bForce)
 	{
 		static int offset = g_GameConfig->GetOffset("CBasePlayerPawn_CommitSuicide");
 		CALL_VIRTUAL(void, offset, this, bExplode, bForce);
 	}
+
+	CBasePlayerController *GetController() { return m_hController.Get(); }
 };

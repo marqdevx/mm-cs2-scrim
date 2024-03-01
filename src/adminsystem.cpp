@@ -26,30 +26,78 @@
 #include "playermanager.h"
 #include "commands.h"
 #include "ctimer.h"
+#include "detours.h"
+
+#include "utils/entity.h"
+#include "entity/cbaseentity.h"
+#include "entity/cparticlesystem.h"
+#include "entity/cgamerules.h"
+#include "gamesystem.h"
+#include <vector>
 
 extern IVEngineServer2 *g_pEngineServer2;
-extern CEntitySystem *g_pEntitySystem;
+extern CGameEntitySystem *g_pEntitySystem;
+extern CGlobalVars *gpGlobals;
+extern CCSGameRules *g_pGameRules;
 
 CAdminSystem* g_pAdminSystem = nullptr;
 
-CUtlMap<uint32, FnChatCommandCallback_t> g_CommandList(0, 0, DefLessFunc(uint32));
 
 bool practiceMode = false;
+bool no_flash_mode = false;
 extern CUtlVector <CCSPlayerController*> coaches;
 extern void print_coaches();
+extern bool half_last_round;
+char level_name[256];	//Map name workaround for demo names, only when .map has been triggered
+CUtlMap<uint32, CChatCommand *> g_CommandList(0, 0, DefLessFunc(uint32));
 
-#define ADMIN_PREFIX "Admin %s has "
+extern bool g_bEnableBan;
+extern bool g_bEnableCoach;
+extern bool g_bEnableGag;
+extern bool g_bEnableKick;
+extern bool g_bEnablePause;
+extern bool g_bEnablePraccSpawn;
+extern bool g_bEnablePractice;
+extern bool g_bEnableRcon;
+extern bool g_bEnableRecord;
+extern bool g_bEnableRestore;
+extern bool g_bEnableScrim;
+extern bool g_bEnableSlay;
+extern bool g_bEnableTeamControl;
+extern bool g_bEnableTeleport;
+
+
+void PrintSingleAdminAction(const char* pszAdminName, const char* pszTargetName, const char* pszAction, const char* pszAction2 = "", const char* prefix = CHAT_PREFIX)
+{
+	ClientPrintAll(HUD_PRINTTALK, "%s" ADMIN_PREFIX "%s %s%s.", prefix, pszAdminName, pszAction, pszTargetName, pszAction2);
+}
+
+void PrintMultiAdminAction(ETargetType nType, const char* pszAdminName, const char* pszAction, const char* pszAction2 = "", const char* prefix = CHAT_PREFIX)
+{
+	switch (nType)
+	{
+	case ETargetType::ALL:
+		ClientPrintAll(HUD_PRINTTALK, "%s" ADMIN_PREFIX "%s everyone%s.", prefix, pszAdminName, pszAction, pszAction2);
+		break;
+	case ETargetType::T:
+		ClientPrintAll(HUD_PRINTTALK, "%s" ADMIN_PREFIX "%s terrorists%s.", prefix, pszAdminName, pszAction, pszAction2);
+		break;
+	case ETargetType::CT:
+		ClientPrintAll(HUD_PRINTTALK, "%s" ADMIN_PREFIX "%s counter-terrorists%s.", prefix, pszAdminName, pszAction, pszAction2);
+		break;
+	}
+}
 
 CON_COMMAND_F(c_reload_admins, "Reload admin config", FCVAR_SPONLY | FCVAR_LINKED_CONCOMMAND)
 {
 	if (!g_pAdminSystem->LoadAdmins())
 		return;
 
-	for (int i = 0; i < MAXPLAYERS; i++)
+	for (int i = 0; i < gpGlobals->maxClients; i++)
 	{
 		ZEPlayer* pPlayer = g_playerManager->GetPlayer(i);
 
-		if (!pPlayer || pPlayer->IsFakeClient())
+		if (!pPlayer || pPlayer->IsFakeClient() || !pPlayer->IsAuthenticated())
 			continue;
 
 		pPlayer->CheckAdmin();
@@ -58,26 +106,43 @@ CON_COMMAND_F(c_reload_admins, "Reload admin config", FCVAR_SPONLY | FCVAR_LINKE
 	Message("Admins reloaded\n");
 }
 
-CON_COMMAND_F(c_reload_infractions, "Reload infractions file", FCVAR_SPONLY | FCVAR_LINKED_CONCOMMAND)
+CON_COMMAND_CHAT(rcon, "fake rcon")
 {
-	if (!g_pAdminSystem->LoadInfractions())
+	if (!g_bEnableRcon)
+		return;
+	
+	if (!player)
 		return;
 
-	for (int i = 0; i < MAXPLAYERS; i++)
+	int iCommandPlayer = player->GetPlayerSlot();
+
+	ZEPlayer *pPlayer = g_playerManager->GetPlayer(iCommandPlayer);
+
+	if (!pPlayer->IsAdminFlagSet(ADMFLAG_BAN))
 	{
-		ZEPlayer* pPlayer = g_playerManager->GetPlayer(i);
-
-		if (!pPlayer || pPlayer->IsFakeClient())
-			continue;
-
-		pPlayer->CheckInfractions();
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX"You don't have access to this command.");
+		return;
 	}
 
-	Message("Infractions reloaded\n");
+	char buf[MAX_PATH];
+	V_snprintf(buf, sizeof(buf), "");
+	char last_arg[MAX_PATH];
+	V_snprintf(last_arg, sizeof(last_arg), "");
+
+	for (int i = 1; i < args.ArgC(); i++){
+		V_snprintf(last_arg, sizeof(last_arg), "%s", buf);
+		V_snprintf(buf, sizeof(buf), "%s %s",last_arg, args[i]);
+	}
+
+	ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX"Command sent: \04%s", buf);
+	g_pEngineServer2->ServerCommand(buf);
 }
 
 CON_COMMAND_CHAT(ban, "ban a player")
 {
+	if(!g_bEnableBan)
+		return;
+
 	if (!player)
 		return;
 
@@ -140,8 +205,46 @@ CON_COMMAND_CHAT(ban, "ban a player")
 	ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX ADMIN_PREFIX "banned %s for %i minutes.", player->GetPlayerName(), pTarget->GetPlayerName(), iDuration);
 }
 
+CON_COMMAND_CHAT(unban, "unbans a player")
+{
+	if(!g_bEnableBan)
+		return;
+
+	if (!player)
+		return;
+
+	int iCommandPlayer = player->GetPlayerSlot();
+
+	ZEPlayer *pPlayer = g_playerManager->GetPlayer(iCommandPlayer);
+
+	if (!pPlayer->IsAdminFlagSet(ADMFLAG_BAN))
+	{
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX"You don't have access to this command.");
+		return;
+	}
+
+	if (args.ArgC() < 2)
+	{
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "Usage: !unban <SteamID64>");
+		return;
+	}
+	
+	uint64 targetSteamID =  V_StringToUint64(args[1], -1);
+
+	if(g_pAdminSystem->FindAndRemoveInfraction(targetSteamID, CInfractionBase::Ban)){
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "SeeamID %llu unbanned.", targetSteamID);
+	}else{
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "SeeamID %llu is not banned.", targetSteamID);
+	}
+	
+	return;
+}
+
 CON_COMMAND_CHAT(gag, "gag a player")
 {
+	if(!g_bEnableGag)
+		return;
+
 	if (!player)
 		return;
 
@@ -222,6 +325,9 @@ CON_COMMAND_CHAT(gag, "gag a player")
 
 CON_COMMAND_CHAT(ungag, "ungags a player")
 {
+	if(!g_bEnableGag)
+		return;
+
 	if (!player)
 		return;
 
@@ -292,6 +398,9 @@ CON_COMMAND_CHAT(ungag, "ungags a player")
 
 CON_COMMAND_CHAT(kick, "kick a player")
 {
+	if(!g_bEnableKick)
+		return;
+
 	if (!player)
 		return;
 
@@ -339,6 +448,9 @@ CON_COMMAND_CHAT(kick, "kick a player")
 
 CON_COMMAND_CHAT(slay, "slay a player")
 {
+	if(!g_bEnableSlay)
+		return;
+
 	if (!player)
 		return;
 
@@ -398,6 +510,9 @@ CON_COMMAND_CHAT(slay, "slay a player")
 
 CON_COMMAND_CHAT(goto, "teleport to a player")
 {
+	if(!g_bEnableTeleport)
+		return;
+
 	if (!player)
 		return;
 
@@ -449,6 +564,9 @@ CON_COMMAND_CHAT(goto, "teleport to a player")
 
 CON_COMMAND_CHAT(bring, "bring a player")
 {
+	if(!g_bEnableTeleport)
+		return;
+
 	if (!player)
 		return;
 
@@ -510,6 +628,9 @@ CON_COMMAND_CHAT(bring, "bring a player")
 
 CON_COMMAND_CHAT(setteam, "set a player's team")
 {
+	if(!g_bEnableTeamControl)
+		return;
+
 	if (!player)
 		return;
 
@@ -550,13 +671,12 @@ CON_COMMAND_CHAT(setteam, "set a player's team")
 
 	for (int i = 0; i < iNumClients; i++)
 	{
-		CBasePlayerController *pTarget = (CBasePlayerController *)g_pEntitySystem->GetBaseEntity((CEntityIndex)(pSlots[i] + 1));
+		CCSPlayerController *pTarget = (CCSPlayerController *)g_pEntitySystem->GetBaseEntity((CEntityIndex)(pSlots[i] + 1));
 
 		if (!pTarget)
 			continue;
 
-		pTarget->m_iTeamNum = iTeam;
-		pTarget->GetPawn()->m_iTeamNum = iTeam;
+		pTarget->ChangeTeam(iTeam);
 
 		if (nType < ETargetType::ALL)
 			ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX ADMIN_PREFIX "moved %s to team %i.", player->GetPlayerName(), pTarget->GetPlayerName(), iTeam);
@@ -578,7 +698,7 @@ CON_COMMAND_CHAT(setteam, "set a player's team")
 
 CON_COMMAND_CHAT(noclip, "toggle noclip on yourself")
 {
-	if (!player)
+	if (!player && practiceMode)
 		return;
 
 	int iCommandPlayer = player->GetPlayerSlot();
@@ -863,6 +983,21 @@ bool CAdminSystem::FindAndRemoveInfraction(ZEPlayer *player, CInfractionBase::EI
 	return false;
 }
 
+bool CAdminSystem::FindAndRemoveInfraction(uint64 iSteamID, CInfractionBase::EInfractionType type)
+{
+	FOR_EACH_VEC(m_vecInfractions, i)
+	{
+		if (m_vecInfractions[i]->GetSteamId64() == iSteamID && m_vecInfractions[i]->GetType() == type)
+		{
+			m_vecInfractions.Remove(i);
+
+			return true;
+		}
+	}
+
+	return false;
+}
+
 CAdmin *CAdminSystem::FindAdmin(uint64 iSteamID)
 {
 	FOR_EACH_VEC(m_vecAdmins, i)
@@ -922,6 +1057,9 @@ void CGagInfraction::UndoInfraction(ZEPlayer *player)
 //CS2Scrim custom commands
 CON_COMMAND_CHAT(scrim, "Scrim mode")
 {
+	if (!g_bEnableScrim)
+		return;
+
 	if (!player)
 		return;
 
@@ -951,6 +1089,9 @@ CON_COMMAND_CHAT(scrim, "Scrim mode")
 
 CON_COMMAND_CHAT(pracc, "Practice mode")
 {
+	if(!g_bEnablePractice)
+		return;
+
 	if (!player)
 		return;
 	
@@ -978,6 +1119,9 @@ CON_COMMAND_CHAT(pracc, "Practice mode")
 
 CON_COMMAND_CHAT(forceunpause, "Force unpause")
 {
+	if(!g_bEnablePause)
+		return;
+
 	if (!player)
 		return;
 
@@ -1026,14 +1170,18 @@ CON_COMMAND_CHAT(map, "change map")
 		return;
 	}
 */
+	//V_strncpy
+	V_snprintf(level_name, sizeof(level_name), "%s", args[1]);
+
 	char buf[MAX_PATH];
 	V_snprintf(buf, sizeof(buf), "changelevel de_%s", args[1]);
 
 	ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX"Changing map to %s...", args[1]);
 
-	new CTimer(5.0f, false, false, [buf]()
+	new CTimer(5.0f, false, [buf]()
 	{
 		g_pEngineServer2->ServerCommand(buf);
+		return -5.0f;
 	});
 	
 	
@@ -1041,9 +1189,12 @@ CON_COMMAND_CHAT(map, "change map")
 
 CON_COMMAND_CHAT(restore, "Restore round")
 {
+	if (!g_bEnableRestore)
+		return;
+	
 	if (!player)
 		return;
-
+		
 	int iCommandPlayer = player->GetPlayerSlot();
 
 	ZEPlayer *pPlayer = g_playerManager->GetPlayer(player->GetPlayerSlot());
@@ -1079,12 +1230,17 @@ CON_COMMAND_CHAT(restore, "Restore round")
 
 	ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX"\4Restored round \3%i", nRounds);
 
+	half_last_round = false; //If not set to false, coach will be on the wrong team if it is the last round of the first half
+
 	g_pEngineServer2->ServerCommand(buf);
 }
 
 char demoName[128];
 CON_COMMAND_CHAT(record, "Record demo")
 {
+	if (!g_bEnableRecord)
+		return;
+
 	if (!player)
 		return;
 
@@ -1107,7 +1263,8 @@ CON_COMMAND_CHAT(record, "Record demo")
 	std::localtime(&result);
 	std::strftime(actualTime, sizeof(actualTime), "%d%B_%H-%M", std::localtime(&result));
 
-	V_snprintf(actualMap,MAX_PATH, "unknownMap");
+	V_snprintf(actualMap,MAX_PATH, "%s", gpGlobals->mapname);
+	if((std::string)actualMap == "") V_snprintf(actualMap,MAX_PATH, "unknownMap");
 	V_snprintf(demoName, MAX_PATH, "%s_%s", actualTime, actualMap);
 
 	V_snprintf(buf, MAX_PATH, "tv_record gotv/%s", demoName);
@@ -1130,6 +1287,9 @@ CON_COMMAND_CHAT(record, "Record demo")
 
 CON_COMMAND_CHAT(stoprecord, "Stop demo recording")
 {
+	if (!g_bEnableRecord)
+		return;
+	
 	if (!player)
 		return;
 
