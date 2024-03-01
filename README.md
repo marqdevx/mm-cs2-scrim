@@ -65,7 +65,7 @@ The plugin has been developed with these ideas in mind:
   - [X] gotv .record
     - [X] include date and time
     - [X] include map name
-      - [ ] Automatically
+      - [X] Automatically
   - [ ] Damage print on round-end
 - Practice
   - Maps
@@ -89,6 +89,8 @@ The plugin has been developed with these ideas in mind:
   - BOTs management
       - [ ] Place
       - [ ] Boost
+- General
+  - [X] rcon
 
 > I'll try to documentate everything as better as possible, feel free to leave suggestions!
 
@@ -105,7 +107,7 @@ You can enable/disable the features of the plugin by changing the values at `<se
 
 ### Requirements
 
-- [Metamod:Source](https://www.sourcemm.net/downloads.php/?branch=master) (build 1219 or higher)
+- [Metamod:Source](https://www.sourcemm.net/downloads.php/?branch=master) (build 1282 or higher)
 - [AMBuild](https://wiki.alliedmods.net/Ambuild)
 
 ## Credits
