@@ -48,7 +48,7 @@ bool CGameConfig::Init(IFileSystem *filesystem, char *conf_error, int conf_error
 				m_umSignatures[it->GetName()] = std::string(it->GetString(platform));
 			}
 		}
-
+/*
 		KeyValues *patches = game->FindKey("Patches", false);
 		if (patches)
 		{
@@ -56,7 +56,7 @@ bool CGameConfig::Init(IFileSystem *filesystem, char *conf_error, int conf_error
 			{
 				m_umPatches[it->GetName()] = std::string(it->GetString(platform));
 			}
-		}
+		}*/
 	}
 	else
 	{
