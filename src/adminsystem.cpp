@@ -1263,8 +1263,8 @@ CON_COMMAND_CHAT(record, "Record demo")
 	std::localtime(&result);
 	std::strftime(actualTime, sizeof(actualTime), "%d%B_%H-%M", std::localtime(&result));
 
-	V_snprintf(actualMap,MAX_PATH, "unknownMap");
-	if(level_name != "")V_snprintf(actualMap,MAX_PATH, "%s", level_name);
+	V_snprintf(actualMap,MAX_PATH, "%s", gpGlobals->mapname);
+	if((std::string)actualMap == "") V_snprintf(actualMap,MAX_PATH, "unknownMap");
 	V_snprintf(demoName, MAX_PATH, "%s_%s", actualTime, actualMap);
 
 	V_snprintf(buf, MAX_PATH, "tv_record gotv/%s", demoName);
