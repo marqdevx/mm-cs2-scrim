@@ -212,4 +212,5 @@ public:
 	DECLARE_SCHEMA_CLASS(SpawnPoint);
 
 	SCHEMA_FIELD(bool, m_bEnabled);
+	SCHEMA_FIELD(int, m_iPriority);
 };
