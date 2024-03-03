@@ -378,6 +378,7 @@ FAKE_BOOL_CVAR(cs2scrim_scrim, "Whether to enable coach", g_bEnableScrim, true, 
 FAKE_BOOL_CVAR(cs2scrim_admin_slay, "Whether to enable coach", g_bEnableSlay, true, false)
 FAKE_BOOL_CVAR(cs2scrim_admin_team, "Whether to enable coach", g_bEnableTeamControl, true, false)
 FAKE_BOOL_CVAR(cs2scrim_admin_teleport, "Whether to enable coach", g_bEnableTeleport, true, false)
+
 /* Player commands */
 CON_COMMAND_CHAT(myuid, "test")
 {
@@ -391,9 +392,8 @@ CON_COMMAND_CHAT(myuid, "test")
 
 
 CON_COMMAND_CHAT(noflash, "noflash"){
-		return;
 
-	if (!player)
+	if (!player || !g_bEnablePractice)
 		return;
 	
 	no_flash_mode = !no_flash_mode;
