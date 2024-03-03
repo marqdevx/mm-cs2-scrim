@@ -30,7 +30,6 @@
 #include "common.h"
 #include "commands.h"
 #include "detours.h"
-#include "patches.h"
 #include "icvar.h"
 #include "interface.h"
 #include "tier0/dbg.h"
@@ -197,9 +196,6 @@ bool CS2Fixes::Load(PluginId id, ISmmAPI *ismm, char *error, size_t maxlen, bool
 	if (!addresses::Initialize(g_GameConfig))
 		bRequiredInitLoaded = false;
 
-	/*if (!InitPatches(g_GameConfig))
-		bRequiredInitLoaded = false;
-*/
 	if (!InitDetours(g_GameConfig))
 		bRequiredInitLoaded = false;
 
@@ -295,7 +291,6 @@ bool CS2Fixes::Unload(char *error, size_t maxlen)
 	coaches.Purge();
 
 	FlushAllDetours();
-	//UndoPatches();
 	RemoveTimers();
 	UnregisterEventListeners();
 
