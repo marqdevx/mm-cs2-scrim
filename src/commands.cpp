@@ -735,5 +735,10 @@ CON_COMMAND_CHAT(last, "Teleport to the last thrown grenade")
 
 	ZEPlayer *pPlayer = g_playerManager->GetPlayer(player->GetPlayerSlot());
 	
+	if(pPlayer->lastThrow_position.x == 0.0f && pPlayer->lastThrow_position.y == 0.0f && pPlayer->lastThrow_position.z == 0.0f){
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "No lineup saved");
+		return;
+	}
+
 	player->GetPawn()->Teleport(&pPlayer->lastThrow_position, &pPlayer->lastThrow_rotation, nullptr);
 }

@@ -68,6 +68,8 @@ public:
 		m_bInGame = false;
 		m_iMZImmunity = 0; // out of 100
 		m_flNominateTime = -60.0f;
+
+		lastThrow_position = Vector(0,0,0);
 	}
 
 	~ZEPlayer()
