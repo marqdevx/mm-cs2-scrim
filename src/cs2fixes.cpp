@@ -609,7 +609,7 @@ const char *CS2Fixes::GetLicense()
 
 const char *CS2Fixes::GetVersion()
 {
-	return "1.1.0-beta";
+	return "1.1.0";
 }
 
 const char *CS2Fixes::GetDate()
