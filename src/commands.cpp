@@ -390,17 +390,6 @@ CON_COMMAND_CHAT(myuid, "test")
 	ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "Your userid is %i, slot: %i, retrieved slot: %i", g_pEngineServer2->GetPlayerUserId(iPlayer).Get(), iPlayer, g_playerManager->GetSlotFromUserId(g_pEngineServer2->GetPlayerUserId(iPlayer).Get()));
 }
 
-
-CON_COMMAND_CHAT(noflash, "noflash"){
-
-	if (!player || !g_bEnablePractice)
-		return;
-	
-	no_flash_mode = !no_flash_mode;
-
-	ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "Flash mode set to \04%i", no_flash_mode);
-}
-
 bool match_paused = false;
 bool ct_ready = true;
 bool t_ready = true;
@@ -457,6 +446,21 @@ CON_COMMAND_CHAT(unpause, "Request unpause")
 	match_paused = false;
 	ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX"Match \2unpaused");
 	g_pEngineServer2->ServerCommand("mp_unpause_match");
+}
+
+CON_COMMAND_CHAT(noflash, "noflash"){
+
+	if (!player || !g_bEnablePractice)
+		return;
+	
+	if (!practiceMode){
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX"Only available on practice mode");
+		return;
+	}
+	
+	no_flash_mode = !no_flash_mode;
+
+	ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "Flash mode set to \04%i", no_flash_mode);
 }
 
 CON_COMMAND_CHAT(spawn, "teleport to desired spawn")
