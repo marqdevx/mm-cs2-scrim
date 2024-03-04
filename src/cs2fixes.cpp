@@ -525,6 +525,13 @@ void CS2Fixes::Hook_ClientDisconnect( CPlayerSlot slot, ENetworkDisconnectionRea
 	Message( "Hook_ClientDisconnect(%d, %d, \"%s\", %lli, \"%s\")\n", slot, reason, pszName, xuid, pszNetworkID );
 
 	g_playerManager->OnClientDisconnect(slot);
+	
+	if (coaches.Count() < 1) return;
+	FOR_EACH_VEC(coaches,i){
+		if(coaches[i]->GetPlayerSlot() == slot.Get()){	
+			coaches.Remove(i);
+		}
+	}
 }
 
 void CS2Fixes::Hook_GameFrame( bool simulating, bool bFirstTick, bool bLastTick )
