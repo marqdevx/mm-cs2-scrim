@@ -27,17 +27,17 @@ The plugin has been developed with these ideas in mind:
   `.pracc`: launch the practice config  
   `.scrim`: start the competitive match  
   `.map <map>`: change the map (example: `.map ancient`)  
-  `.rcon <command>`: workaround to be used as the old rcon, execute commands from server side
+  `.rcon <command>`: workaround to be used as the old rcon, execute commands from server side. Usage on the console `c_rcon <comnand>`  
 
 * Scrim commands  
   `.pause`: pauses the match  
   `.unpause`: request the unpause  
   * Coach  
-    `.coach`: switch to coach  
+    `.coach`: switch to coach, also available `.coach <ct/t>`  
     `.uncoach`: return as a player  
   * Admin only  
     `.record`: start the demo recording  
-    `.stoprecord`: finish the recording and save it under `gotv/<date>.dem`  
+    `.stoprecord`: finish the recording and save it under `gotv/<date_time_map>.dem` example: `gotv/03March_20-08_de_anubis.dem`  
     `.restore <round>`: load the desired round's backup  
     `.forceunpause`: force the unpause  
 
@@ -79,6 +79,7 @@ The plugin has been developed with these ideas in mind:
     - [ ] Remove smokes
     - [ ] Rethrow
     - [ ] Throw information (air-time, bounces...)
+      - [X] Flash target and time
     - [ ] Save throws and lineups
       - [X] Last
   - Misc
