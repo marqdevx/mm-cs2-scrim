@@ -1265,11 +1265,14 @@ CON_COMMAND_CHAT(record, "Record demo")
 
 	V_snprintf(actualMap,MAX_PATH, "%s", gpGlobals->mapname);
 	if((std::string)actualMap == "") V_snprintf(actualMap,MAX_PATH, "unknownMap");
+
 	V_snprintf(demoName, MAX_PATH, "%s_%s", actualTime, actualMap);
 
 	V_snprintf(buf, MAX_PATH, "tv_record gotv/%s", demoName);
-	ClientPrint(player, HUD_PRINTTALK, buf);
 	g_pEngineServer2->ServerCommand(buf);
+
+	ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "Demo will be saved at \4gotv/%s", demoName);
+
 	//V_snprintf(buf, MAX_PATH, "record gotv/%s", demoName);
 /*
 	FormatTime(actualTime, sizeof(actualTime), "%d%B_%H-%M", GetTimestamp());	//https://www.tutorialspoint.com/c_standard_library/c_function_strftime.htm
@@ -1302,14 +1305,8 @@ CON_COMMAND_CHAT(stoprecord, "Stop demo recording")
 		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "You don't have access to this command.");
 		return;
 	}
-
-	char buf[256];
-	char command[256];
 	
-	V_snprintf(buf, MAX_PATH, "Demo saved at gotv/%s", demoName);
-	ClientPrint(player, HUD_PRINTTALK, buf);
+	ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "Demo saved at \4gotv/%s", demoName);
 
-	V_snprintf(command, MAX_PATH, "tv_stoprecord");
-	g_pEngineServer2->ServerCommand(command);
-	
+	g_pEngineServer2->ServerCommand("tv_stoprecord");
 }

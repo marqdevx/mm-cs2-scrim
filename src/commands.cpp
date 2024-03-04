@@ -408,7 +408,7 @@ CON_COMMAND_CHAT(pause, "Request pause")
 
 	g_pEngineServer2->ServerCommand("mp_pause_match");
 
-	ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX"%s requested a pause", player->GetPlayerName());
+	ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX"\4%s \1requested a pause", player->GetPlayerName());
 
 	match_paused = true;
 	ct_ready = false;
@@ -436,15 +436,15 @@ CON_COMMAND_CHAT(unpause, "Request unpause")
 	}
 
 	if(ct_ready && !t_ready){
-		ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX"CT ready, type .unpause");
+		ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX"CT \5ready\1, type \4.unpause");
 		return;
 	}else if(!ct_ready && t_ready){
-		ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX"T ready, type .unpause");
+		ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX"T \5ready\1, type \4.unpause");
 		return;
 	}
 
 	match_paused = false;
-	ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX"Match \2unpaused");
+	ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX"Match \4unpaused");
 	g_pEngineServer2->ServerCommand("mp_unpause_match");
 }
 
@@ -575,7 +575,7 @@ void print_coaches(){
 	
 	ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX"\5%i \1active \5coaches", coaches.Count());
 	FOR_EACH_VEC(coaches,i){
-		ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX"Coach %i: \5%s", i+1, coaches[i]->GetPlayerName());
+		ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX"Coach %i: \4%s", i+1, coaches[i]->GetPlayerName());
 	}
 }
 
