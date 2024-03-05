@@ -560,8 +560,9 @@ CON_COMMAND_CHAT(spawn, "teleport to desired spawn")
 	}
 
 	int totalSpawns = spawns.Count();
-
-	pPawn->SetAbsOrigin(spawnpos);
+	
+	//ClientPrint(player, HUD_PRINTTALK, "Spawn: %f / %f / %f", spawnpos.x, spawnpos.y, spawnpos.z);
+	player->GetPawn()->Teleport(&spawnpos, nullptr, nullptr);
 
 	ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX"You have been teleported to spawn. %i/%i", spawnIndex +1, totalSpawns);			
 }
