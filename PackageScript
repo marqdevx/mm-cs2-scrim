@@ -50,6 +50,7 @@ with open(os.path.join(builder.buildPath, 'pdblog.txt'), 'wt') as fp:
 
 # Add CS2Fixes-specific files
 builder.AddFolder(os.path.join('addons', MMSPlugin.plugin_name, 'data'))
+builder.AddFolder(os.path.join('gotv'))
 configs_folder = builder.AddFolder(os.path.join('addons', MMSPlugin.plugin_name, 'configs'))
 zr_folder = builder.AddFolder(os.path.join('addons', MMSPlugin.plugin_name, 'configs', 'zr'))
 cfg_folder = builder.AddFolder(os.path.join('cfg', MMSPlugin.plugin_name))
