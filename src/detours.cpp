@@ -51,7 +51,6 @@ extern CCSGameRules *g_pGameRules;
 DECLARE_DETOUR(UTIL_SayTextFilter, Detour_UTIL_SayTextFilter);
 DECLARE_DETOUR(UTIL_SayText2Filter, Detour_UTIL_SayText2Filter);
 //DECLARE_DETOUR(IsHearingClient, Detour_IsHearingClient);
-DECLARE_DETOUR(CSoundEmitterSystem_EmitSound, Detour_CSoundEmitterSystem_EmitSound);
 //DECLARE_DETOUR(TriggerPush_Touch, Detour_TriggerPush_Touch);
 DECLARE_DETOUR(CGameRules_Constructor, Detour_CGameRules_Constructor);
 //DECLARE_DETOUR(CBaseEntity_TakeDamageOld, Detour_CBaseEntity_TakeDamageOld);
@@ -71,12 +70,6 @@ static bool g_bBlockAllDamage = false;
 
 FAKE_BOOL_CVAR(cs2f_block_molotov_self_dmg, "Whether to block self-damage from molotovs", g_bBlockMolotovSelfDmg, false, false)
 FAKE_BOOL_CVAR(cs2f_block_all_dmg, "Whether to block all damage to players", g_bBlockAllDamage, false, false)
-
-void FASTCALL Detour_CSoundEmitterSystem_EmitSound(ISoundEmitterSystemBase *pSoundEmitterSystem, CEntityIndex *a2, IRecipientFilter &filter, uint32 a4, void *a5)
-{
-	//ConMsg("Detour_CSoundEmitterSystem_EmitSound\n");
-	CSoundEmitterSystem_EmitSound(pSoundEmitterSystem, a2, filter, a4, a5);
-}
 
 
 void SayChatMessageWithTimer(IRecipientFilter &filter, const char *pText, CCSPlayerController *pPlayer, uint64 eMessageType)
@@ -288,10 +281,6 @@ bool InitDetours(CGameConfig *gameConfig)
 	if (!UTIL_SayText2Filter.CreateDetour(gameConfig))
 		success = false;
 	UTIL_SayText2Filter.EnableDetour();
-
-	if (!CSoundEmitterSystem_EmitSound.CreateDetour(gameConfig))
-		success = false;
-	CSoundEmitterSystem_EmitSound.EnableDetour();
 
 	if (!CGameRules_Constructor.CreateDetour(gameConfig))
 		success = false;

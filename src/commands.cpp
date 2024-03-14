@@ -402,36 +402,33 @@ CON_COMMAND_CHAT(pause, "Request pause")
 	if (!player)
 		return;
 
-	int iPlayer = player->GetPlayerSlot();
-
-	CBasePlayerController* pPlayer = (CBasePlayerController*)g_pEntitySystem->GetBaseEntity((CEntityIndex)(player->GetPlayerSlot() + 1));
-
-	g_pEngineServer2->ServerCommand("mp_pause_match");
-
-	ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX"\4%s \1requested a pause", player->GetPlayerName());
+	if(match_paused) {
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX" Match already paused");
+		return;
+	}
 
 	match_paused = true;
+
+	g_pEngineServer2->ServerCommand("mp_pause_match");
+	ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX"\4%s \1requested a pause", player->GetPlayerName());
 	ct_ready = false;
 	t_ready = false;	
 }
 
 CON_COMMAND_CHAT(unpause, "Request unpause")
 {
-	if(!g_bEnablePause)
+	if(!g_bEnablePause || !player)
 		return;
 
-	if (!player)
+	if (!match_paused){
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX"Match is not paused yet, type \5 .pause");
 		return;
+	}
 
-	if(!match_paused)
-		return;
-	
-	CBasePlayerController* pPlayer = (CBasePlayerController*)g_pEntitySystem->GetBaseEntity((CEntityIndex)(player->GetPlayerSlot() + 1));
-	
-	int teamSide = pPlayer->m_iTeamNum();
-	if( teamSide == CS_TEAM_T && !t_ready){
+	int teamSide = player->m_iTeamNum();
+	if(teamSide == CS_TEAM_T && !t_ready){
 		t_ready = true;
-	}else if( teamSide == CS_TEAM_CT && !ct_ready){
+	}else if(teamSide == CS_TEAM_CT && !ct_ready){
 		ct_ready = true;
 	}
 
