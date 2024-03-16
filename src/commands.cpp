@@ -599,6 +599,8 @@ CON_COMMAND_CHAT(coach, "Request slot coach")
 
 	coaches.AddToTail(player);
 
+	player->GetPawn()->m_clrRender(Color(255, 255, 255, 0));
+	
 	int target_team_number = CS_TEAM_SPECTATOR;
 
 	if(args.ArgC() > 1){
@@ -649,6 +651,8 @@ CON_COMMAND_CHAT(uncoach, "Undo slot coach")
 
 	if (!pTarget)
 		return;
+	
+	pTarget->GetPawn()->m_clrRender(Color(255, 255, 255, 255));
 
 	//Check it is not existing already
 	FOR_EACH_VEC(coaches,i){
