@@ -33,6 +33,7 @@ public:
 	SCHEMA_FIELD(CCSPlayerController_InGameMoneyServices*, m_pInGameMoneyServices)
 	SCHEMA_FIELD(CCSPlayerController_ActionTrackingServices*, m_pActionTrackingServices)
 	SCHEMA_FIELD(CUtlSymbolLarge, m_szClan)
+	SCHEMA_FIELD(int32_t , m_iCompTeammateColor);
 	SCHEMA_FIELD(bool, m_bPawnIsAlive);
 	SCHEMA_FIELD(CHandle<CCSPlayerPawn>, m_hPlayerPawn);
 
