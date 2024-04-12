@@ -265,8 +265,9 @@ GAME_EVENT_F(grenade_thrown){
 	if (!practiceMode || !g_bEnablePractice)
 		return;
 
-	CCSPlayerController* pController = (CCSPlayerController *)g_pEntitySystem->GetBaseEntity((CEntityIndex)(pEvent->GetUint64("userid") + 1));
-	
+	//CCSPlayerController* pController = (CCSPlayerController *)g_pEntitySystem->GetBaseEntity((CEntityIndex)(pEvent->GetUint64("userid") + 1));
+	CCSPlayerController *pController = (CCSPlayerController *)pEvent->GetPlayerController("userid");
+
 	if (!pController)
 		return;
 
@@ -275,10 +276,15 @@ GAME_EVENT_F(grenade_thrown){
 
 	CCSPlayerPawnBase* cPlayerBase = (CCSPlayerPawnBase*)pController->GetPawn();
 	QAngle currentAngle = cPlayerBase->m_angEyeAngles;
-	
-	//ClientPrintAll( HUD_PRINTTALK, CHAT_PREFIX "Pos: %f, %f, %f", currentPos.x, currentPos.y, currentPos.z);
 
 	ZEPlayer *pPlayer = g_playerManager->GetPlayer(pController->GetPlayerSlot());
-	pPlayer->lastThrow_position = currentPos;
-	pPlayer->lastThrow_rotation = currentAngle;
+	t_throw currentThrow;
+
+	currentThrow.lastThrow_position = currentPos;
+	currentThrow.lastThrow_rotation = currentAngle;
+
+	pPlayer->grenade_throws.AddToTail(currentThrow);
+
+	ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX "Pos: %f, %f, %f", currentThrow.lastThrow_position.x, currentThrow.lastThrow_position.y, currentThrow.lastThrow_position.z);
+	ClientPrintAll(HUD_PRINTTALK, CHAT_PREFIX "Count:%i Pos: %f, %f, %f", pPlayer->grenade_throws.Count(), pPlayer->grenade_throws[pPlayer->grenade_throws.Count()-1].lastThrow_position.x, pPlayer->grenade_throws[pPlayer->grenade_throws.Count()-1].lastThrow_position.y, pPlayer->grenade_throws[pPlayer->grenade_throws.Count()-1].lastThrow_position.z);
 }

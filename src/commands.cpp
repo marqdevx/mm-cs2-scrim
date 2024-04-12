@@ -737,10 +737,40 @@ CON_COMMAND_CHAT(last, "Teleport to the last thrown grenade")
 
 	ZEPlayer *pPlayer = g_playerManager->GetPlayer(player->GetPlayerSlot());
 	
-	if(pPlayer->lastThrow_position.x == 0.0f && pPlayer->lastThrow_position.y == 0.0f && pPlayer->lastThrow_position.z == 0.0f){
+	if(!pPlayer->grenade_throws.Count()){
 		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "No lineup saved");
 		return;
 	}
 
-	player->GetPawn()->Teleport(&pPlayer->lastThrow_position, &pPlayer->lastThrow_rotation, nullptr);
+	player->GetPawn()->Teleport(&pPlayer->grenade_throws[pPlayer->grenade_throws.Count()-1].lastThrow_position, &pPlayer->grenade_throws[pPlayer->grenade_throws.Count()-1].lastThrow_rotation, nullptr);
+}
+
+CON_COMMAND_CHAT(back, "Teleport to the selected thrown grenade")
+{
+	if (!player || !g_bEnablePractice)
+		return;
+
+	if (!practiceMode)
+	{
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "Last grenade teleport only available on .pracc mode");
+		return;
+	}
+
+	ZEPlayer *pPlayer = g_playerManager->GetPlayer(player->GetPlayerSlot());
+	
+	if(!pPlayer->grenade_throws.Count()){
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "No lineups yet");
+		return;
+	}
+
+	int target_index = atoi(args[1]);
+
+	if(target_index >= pPlayer->grenade_throws.Count()){
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "Target number out of index");
+		return;
+	}
+	
+	target_index++;
+
+	player->GetPawn()->Teleport(&pPlayer->grenade_throws[pPlayer->grenade_throws.Count()-target_index].lastThrow_position, &pPlayer->grenade_throws[pPlayer->grenade_throws.Count()-target_index].lastThrow_rotation, nullptr);
 }

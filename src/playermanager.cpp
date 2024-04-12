@@ -124,6 +124,8 @@ bool CPlayerManager::OnClientConnected(CPlayerSlot slot, uint64 xuid, const char
 	ZEPlayer *pPlayer = new ZEPlayer(slot);
 	pPlayer->SetUnauthenticatedSteamId(new CSteamID(xuid));
 
+	pPlayer->grenade_throws.Purge();
+
 	std::string ip(pszNetworkID);
 
 	// Remove port
