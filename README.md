@@ -1,4 +1,5 @@
-![Build pass](https://github.com/marqdevx/mm-cs2-scrim/actions/workflows/compile-metamod-addon.yaml/badge.svg)
+![Build pass](https://github.com/marqdevx/mm-cs2-scrim/actions/workflows/compile-metamod-addon.yaml/badge.svg)  
+![GitHub downloads](https://img.shields.io/github/downloads/marqdevx/mm-cs2-scrim/total.svg?style=flat-square&label=Downloads)
 
 ## IMPORTANT
 This repository is based on https://github.com/Source2ZE/CS2Fixes/
