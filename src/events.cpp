@@ -44,6 +44,39 @@ bool swapped_teams = false;
 extern bool g_bEnablePractice;
 extern bool g_bEnableCoach;
 
+int g_DamageDone[MAXPLAYERS+1][MAXPLAYERS+1];
+int g_DamageDoneHits[MAXPLAYERS+1][MAXPLAYERS+1];
+
+bool g_bEnableDamagePrint = true;
+FAKE_BOOL_CVAR(cs2scrim_damage_print, "Whether to enable chat Damage Print", g_bEnableDamagePrint, true, false)
+
+void PrintDamageInfo(int client) {
+	CCSPlayerController* pController = CCSPlayerController::FromSlot(client);
+
+	if(!pController)
+		return;
+
+    int team = pController->m_iTeamNum();
+    if (team != CS_TEAM_T && team != CS_TEAM_CT)
+        return;
+
+    int otherTeam = (team == CS_TEAM_T) ? CS_TEAM_CT : CS_TEAM_T;
+	
+    for (int i = 1; i <= gpGlobals->maxClients; i++) {
+			CCSPlayerController* pTarget = CCSPlayerController::FromSlot(i);
+
+			if(!pTarget) 
+				continue;
+
+			if (pTarget->m_iTeamNum() == otherTeam) {
+				int targetHealth = pTarget->GetPawn()->m_iHealth();
+				if (targetHealth < 0) targetHealth = 0;
+
+				ClientPrint(pController, HUD_PRINTTALK, CHAT_PREFIX "(%i dmg / %i hits) to  (%i dmg / %i hits) from %s (%i)", g_DamageDone[client][i], g_DamageDoneHits[client][i], g_DamageDone[i][client],  g_DamageDoneHits[i][client], pTarget->GetPlayerName(), targetHealth);
+			}
+    }
+}
+
 void RegisterEventListeners()
 {
 	static bool bRegistered = false;
@@ -155,6 +188,15 @@ GAME_EVENT_F(round_prestart)
 
 GAME_EVENT_F(round_start)
 {
+	if(g_bEnableDamagePrint){
+		for (int i = 1; i <= gpGlobals->maxClients; i++) {
+			for (int j = 1; j <= gpGlobals->maxClients; j++) {
+				g_DamageDone[i][j] = 0;
+				g_DamageDoneHits[i][j] = 0;
+			}
+		}
+	}
+
 	if (coaches.Count() < 1) return;
 	
 	FOR_EACH_VEC(coaches,i){
@@ -219,19 +261,35 @@ GAME_EVENT_F(round_freeze_end)
 }
 
 GAME_EVENT_F(player_hurt){
-	if(!practiceMode || !g_bEnablePractice) return;
 
-	CCSPlayerController* pController = (CCSPlayerController *)g_pEntitySystem->GetBaseEntity((CEntityIndex)(pEvent->GetUint64("attacker") + 1));
-	
-	if (!pController)
-		return;
+	CCSPlayerController* pVictim = (CCSPlayerController *)g_pEntitySystem->GetBaseEntity((CEntityIndex)(pEvent->GetUint64("userid") + 1));
+	CCSPlayerController* pAttacker = (CCSPlayerController *)g_pEntitySystem->GetBaseEntity((CEntityIndex)(pEvent->GetUint64("attacker") + 1));
 
-	CCSPlayerController* pHurt = (CCSPlayerController *)g_pEntitySystem->GetBaseEntity((CEntityIndex)(pEvent->GetUint64("userid") + 1));
-	//ClientPrintAll(HUD_PRINTTALK, "Smoke end %i", pEvent->GetUint64("entityid"));
+	if(!pVictim || !pAttacker) return;
+
 	int damage = pEvent->GetFloat("dmg_health");
-	int actualHealth = pEvent->GetFloat("health");
-	ClientPrint(pController, HUD_PRINTTALK, CHAT_PREFIX "Damage done \04%d \01to \04%s\1[\04%d\01]", damage , pHurt->GetPlayerName(), actualHealth);
+	int postDamageHealth = pEvent->GetFloat("health");
+	int preDamageHealth = pVictim->GetPawn()->m_iHealth();
+
+	if(g_bEnableDamagePrint && !practiceMode){
+		int attacker = pEvent->GetFloat("attacker");
+		int victim = pEvent->GetFloat("userid");
+
+ 		// this maxes the damage variables at 100,
+        // so doing 50 damage when the player had 2 health
+        // only counts as 2 damage.
+        if (postDamageHealth == 0) {
+            damage += preDamageHealth;
+        }
+
+        g_DamageDone[attacker][victim] += damage;
+        g_DamageDoneHits[attacker][victim]++;
+		return;
+	}
+
+	if(!practiceMode || !g_bEnablePractice) return;
 	
+	ClientPrint(pAttacker, HUD_PRINTTALK, CHAT_PREFIX "Damage done \04%d \01to \04%s\1[\04%d\01]", damage , pVictim->GetPlayerName(), postDamageHealth);
 }
 
 GAME_EVENT_F(player_blind){
@@ -281,4 +339,18 @@ GAME_EVENT_F(grenade_thrown){
 	ZEPlayer *pPlayer = g_playerManager->GetPlayer(pController->GetPlayerSlot());
 	pPlayer->lastThrow_position = currentPos;
 	pPlayer->lastThrow_rotation = currentAngle;
+}
+
+GAME_EVENT_F(round_end){
+	if(!g_bEnableDamagePrint)
+		return;
+
+    for (int i = 1; i <= gpGlobals->maxClients; i++) {
+		CCSPlayerController* pController = CCSPlayerController::FromSlot(i);
+
+		if(!pController)
+			continue;
+
+		PrintDamageInfo(i);
+    }
 }
