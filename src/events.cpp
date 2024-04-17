@@ -46,6 +46,7 @@ extern bool g_bEnableCoach;
 
 int g_DamageDone[MAXPLAYERS+1][MAXPLAYERS+1];
 int g_DamageDoneHits[MAXPLAYERS+1][MAXPLAYERS+1];
+bool damagePrint_shown = false;
 
 bool g_bEnableDamagePrint = true;
 FAKE_BOOL_CVAR(cs2scrim_damage_print, "Whether to enable chat Damage Print", g_bEnableDamagePrint, true, false)
@@ -188,7 +189,7 @@ GAME_EVENT_F(round_prestart)
 
 GAME_EVENT_F(round_start)
 {
-	if(g_bEnableDamagePrint){
+	if (g_bEnableDamagePrint && damagePrint_shown){
 		for (int i = 1; i <= gpGlobals->maxClients; i++) {
 			for (int j = 1; j <= gpGlobals->maxClients; j++) {
 				g_DamageDone[i][j] = 0;
@@ -342,7 +343,7 @@ GAME_EVENT_F(grenade_thrown){
 }
 
 GAME_EVENT_F(round_end){
-	if(!g_bEnableDamagePrint)
+	if(!g_bEnableDamagePrint || practiceMode)
 		return;
 
     for (int i = 1; i <= gpGlobals->maxClients; i++) {
@@ -353,4 +354,6 @@ GAME_EVENT_F(round_end){
 
 		PrintDamageInfo(i);
     }
+	
+	damagePrint_shown = true;
 }
