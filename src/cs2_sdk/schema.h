@@ -1,7 +1,7 @@
 /**
  * =============================================================================
  * CS2Fixes
- * Copyright (C) 2023 Source2ZE
+ * Copyright (C) 2023-2024 Source2ZE
  * =============================================================================
  *
  * This program is free software; you can redistribute it and/or modify it under
@@ -18,8 +18,6 @@
  */
 
 #pragma once
-
-#include "stdint.h"
 
 #ifdef _WIN32
 #pragma warning(push)

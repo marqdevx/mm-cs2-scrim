@@ -27,9 +27,6 @@
 #include "ctimer.h"
 #include "ctime"
 
-#define VPROF_ENABLED
-#include "tier0/vprof.h"
-
 #include "tier0/memdbgon.h"
 
 
