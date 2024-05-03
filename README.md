@@ -112,7 +112,7 @@ You can enable/disable the features of the plugin by changing the values at `<se
 
 ### Requirements
 
-- [Metamod:Source](https://www.sourcemm.net/downloads.php/?branch=master) (build 1282 or higher)
+- [Metamod:Source](https://www.sourcemm.net/downloads.php/?branch=master) (build 1290 or higher)
 - [AMBuild](https://wiki.alliedmods.net/Ambuild)
 
 ## Credits
