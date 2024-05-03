@@ -390,6 +390,18 @@ CON_COMMAND_CHAT(myuid, "test")
 	ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "Your userid is %i, slot: %i, retrieved slot: %i", g_pEngineServer2->GetPlayerUserId(iPlayer).Get(), iPlayer, g_playerManager->GetSlotFromUserId(g_pEngineServer2->GetPlayerUserId(iPlayer).Get()));
 }
 
+CON_COMMAND_CHAT(color, "Set player's hud color") {
+	if (!player)
+		return;
+	
+	if (args.ArgC() < 2){
+		ClientPrint(player, HUD_PRINTTALK, CHAT_PREFIX "Usage .color <1-5>");
+		return;
+	}
+
+	player->m_iCompTeammateColor = atoi(args[1]) % 5;
+}
+
 bool match_paused = false;
 bool ct_ready = true;
 bool t_ready = true;

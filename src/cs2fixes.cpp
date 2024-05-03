@@ -33,7 +33,7 @@
 #include "icvar.h"
 #include "interface.h"
 #include "tier0/dbg.h"
-#include "cschemasystem.h"
+#include "schemasystem/schemasystem.h"
 #include "plat.h"
 #include "entitysystem.h"
 #include "engine/igameeventsystem.h"
@@ -52,9 +52,6 @@
 #include "entity/cgamerules.h"
 #include "entity/ccsplayercontroller.h"
 #include "entitylistener.h"
-
-#define VPROF_ENABLED
-#include "tier0/vprof.h"
 
 #include "tier0/memdbgon.h"
 
@@ -120,7 +117,6 @@ IGameEventManager2 *g_gameEventManager = nullptr;
 INetworkGameServer *g_pNetworkGameServer = nullptr;
 CGameEntitySystem *g_pEntitySystem = nullptr;
 CEntityListener *g_pEntityListener = nullptr;
-CSchemaSystem *g_pSchemaSystem2 = nullptr;
 CGlobalVars *gpGlobals = nullptr;
 CPlayerManager *g_playerManager = nullptr;
 IVEngineServer2 *g_pEngineServer2 = nullptr;
@@ -141,9 +137,9 @@ bool CS2Fixes::Load(PluginId id, ISmmAPI *ismm, char *error, size_t maxlen, bool
 	PLUGIN_SAVEVARS();
 
 	GET_V_IFACE_CURRENT(GetEngineFactory, g_pEngineServer2, IVEngineServer2, SOURCE2ENGINETOSERVER_INTERFACE_VERSION);
-	GET_V_IFACE_CURRENT(GetEngineFactory, g_pGameResourceServiceServer, IGameResourceServiceServer, GAMERESOURCESERVICESERVER_INTERFACE_VERSION);
+	GET_V_IFACE_CURRENT(GetEngineFactory, g_pGameResourceServiceServer, IGameResourceService, GAMERESOURCESERVICESERVER_INTERFACE_VERSION);
 	GET_V_IFACE_CURRENT(GetEngineFactory, g_pCVar, ICvar, CVAR_INTERFACE_VERSION);
-	GET_V_IFACE_CURRENT(GetEngineFactory, g_pSchemaSystem2, CSchemaSystem, SCHEMASYSTEM_INTERFACE_VERSION);
+	GET_V_IFACE_CURRENT(GetEngineFactory, g_pSchemaSystem, ISchemaSystem, SCHEMASYSTEM_INTERFACE_VERSION);
 	GET_V_IFACE_ANY(GetServerFactory, g_pSource2Server, ISource2Server, SOURCE2SERVER_INTERFACE_VERSION);
 	GET_V_IFACE_ANY(GetServerFactory, g_pSource2ServerConfig, ISource2ServerConfig, SOURCE2SERVERCONFIG_INTERFACE_VERSION);
 	GET_V_IFACE_ANY(GetServerFactory, g_pSource2GameEntities, ISource2GameEntities, SOURCE2GAMEENTITIES_INTERFACE_VERSION);
@@ -404,7 +400,7 @@ void CS2Fixes::Hook_StartupServer(const GameSessionConfiguration_t& config, ISou
 
 	// Run map cfg (if present)
 	/*char cmd[MAX_PATH];
-	V_snprintf(cmd, sizeof(cmd), "exec cs2fixes/maps/%s", gpGlobals->mapname);
+	V_snprintf(cmd, sizeof(cmd), "exec cs2fixes/maps/%s", gpGlobals->mapname.ToCStr());
 	g_pEngineServer2->ServerCommand(cmd);
 	*/
 
@@ -536,7 +532,7 @@ void CS2Fixes::Hook_ClientDisconnect( CPlayerSlot slot, ENetworkDisconnectionRea
 
 void CS2Fixes::Hook_GameFrame( bool simulating, bool bFirstTick, bool bLastTick )
 {
-	VPROF_ENTER_SCOPE(__FUNCTION__);
+	
 	/**
 	 * simulating:
 	 * ***********
@@ -577,7 +573,6 @@ void CS2Fixes::Hook_GameFrame( bool simulating, bool bFirstTick, bool bLastTick 
 		}
 	}
 
-	VPROF_EXIT_SCOPE();
 }
 
 // Potentially might not work
@@ -616,7 +611,7 @@ const char *CS2Fixes::GetLicense()
 
 const char *CS2Fixes::GetVersion()
 {
-	return "1.1.2";
+	return "1.1.3";
 }
 
 const char *CS2Fixes::GetDate()

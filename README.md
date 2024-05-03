@@ -1,4 +1,5 @@
-![Build pass](https://github.com/marqdevx/mm-cs2-scrim/actions/workflows/compile-metamod-addon.yaml/badge.svg)
+![Build pass](https://github.com/marqdevx/mm-cs2-scrim/actions/workflows/compile-metamod-addon.yaml/badge.svg)  
+![GitHub downloads](https://img.shields.io/github/downloads/marqdevx/mm-cs2-scrim/total.svg?style=flat-square&label=Downloads)
 
 ## IMPORTANT
 This repository is based on https://github.com/Source2ZE/CS2Fixes/
@@ -46,6 +47,9 @@ The plugin has been developed with these ideas in mind:
     `.last`: teleports to your latest thrown grenade lineup  
     `.noflash`: toggle flash effect  
     `.ct`, `.t`, `.spec`, `.side`: switch team side  
+
+* General commands  
+    `.color` : set your cl_color live, in case you have duplicated colors, usage: `.color 2`  
 
 * Leveraged from [CS2Fixes](https://github.com/Source2ZE/CS2Fixes/)  
   `c_reload_admins`: console command to reload admins.cfg  
@@ -108,7 +112,7 @@ You can enable/disable the features of the plugin by changing the values at `<se
 
 ### Requirements
 
-- [Metamod:Source](https://www.sourcemm.net/downloads.php/?branch=master) (build 1282 or higher)
+- [Metamod:Source](https://www.sourcemm.net/downloads.php/?branch=master) (build 1290 or higher)
 - [AMBuild](https://wiki.alliedmods.net/Ambuild)
 
 ## Credits

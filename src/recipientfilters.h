@@ -1,7 +1,7 @@
 /**
  * =============================================================================
  * CS2Fixes
- * Copyright (C) 2023 Source2ZE
+ * Copyright (C) 2023-2024 Source2ZE
  * =============================================================================
  *
  * This program is free software; you can redistribute it and/or modify it under
@@ -19,35 +19,41 @@
 
 #pragma once
 #include "irecipientfilter.h"
+#include "playermanager.h"
 
+// Simple filter for when only 1 recipient is needed
 class CSingleRecipientFilter : public IRecipientFilter
 {
 public:
-	CSingleRecipientFilter(int iRecipient, bool bReliable = true, bool bInitMessage = false) :
-		m_iRecipient(iRecipient), m_bReliable(bReliable), m_bInitMessage(bInitMessage) {}
+	CSingleRecipientFilter(CPlayerSlot iRecipient, NetChannelBufType_t nBufType = BUF_RELIABLE, bool bInitMessage = false) :
+		m_iRecipient(iRecipient), m_nBufType(nBufType), m_bInitMessage(bInitMessage) {}
 
 	~CSingleRecipientFilter() override {}
 
-	bool IsReliable(void) const override { return m_bReliable; }
-
+	NetChannelBufType_t GetNetworkBufType(void) const override { return m_nBufType; }
 	bool IsInitMessage(void) const override { return m_bInitMessage; }
-
 	int GetRecipientCount(void) const override { return 1; }
-
-	CPlayerSlot GetRecipientIndex(int slot) const override { return CPlayerSlot(m_iRecipient); }
+	CPlayerSlot GetRecipientIndex(int slot) const override { return m_iRecipient; }
 
 private:
-	bool m_bReliable;
+	CPlayerSlot m_iRecipient;
+	NetChannelBufType_t m_nBufType;
 	bool m_bInitMessage;
-	int m_iRecipient;
 };
 
-class CCopyRecipientFilter : public IRecipientFilter
+
+class CRecipientFilter : public IRecipientFilter
 {
 public:
-	CCopyRecipientFilter(IRecipientFilter *source, int iExcept)
+	CRecipientFilter()
 	{
-		m_bReliable = source->IsReliable();
+		m_nBufType = BUF_RELIABLE;
+		m_bInitMessage = false;
+	}
+
+	CRecipientFilter(IRecipientFilter *source, int iExcept = -1)
+	{
+		m_nBufType = source->GetNetworkBufType();
 		m_bInitMessage = source->IsInitMessage();
 		m_Recipients.RemoveAll();
 
@@ -58,12 +64,10 @@ public:
 		}
 	}
 
-	~CCopyRecipientFilter() override {}
+	~CRecipientFilter() override {}
 
-	bool IsReliable(void) const override { return m_bReliable; }
-
+	NetChannelBufType_t GetNetworkBufType(void) const override { return m_nBufType; }
 	bool IsInitMessage(void) const override { return m_bInitMessage; }
-
 	int GetRecipientCount(void) const override { return m_Recipients.Count(); }
 
 	CPlayerSlot GetRecipientIndex(int slot) const override
@@ -74,8 +78,30 @@ public:
 		return m_Recipients[slot];
 	}
 
+	void AddAllPlayers(void)
+	{
+		m_Recipients.RemoveAll();
+
+		for (int i = 0; i < MAXPLAYERS; i++)
+		{
+			if (!g_playerManager->GetPlayer(i))
+				continue;
+
+			AddRecipient(i);
+		}
+	}
+
+	void AddRecipient(CPlayerSlot slot)
+	{
+		// Don't add if it already exists
+		if (m_Recipients.Find(slot) != m_Recipients.InvalidIndex())
+			return;
+
+		m_Recipients.AddToTail(slot);
+	}
+
 private:
-	bool m_bReliable;
+	NetChannelBufType_t m_nBufType;
 	bool m_bInitMessage;
-	CUtlVectorFixed<CPlayerSlot, 64> m_Recipients;
+	CUtlVectorFixed<CPlayerSlot, MAXPLAYERS> m_Recipients;
 };
