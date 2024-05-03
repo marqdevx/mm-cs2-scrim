@@ -48,6 +48,9 @@ The plugin has been developed with these ideas in mind:
     `.noflash`: toggle flash effect  
     `.ct`, `.t`, `.spec`, `.side`: switch team side  
 
+* General commands  
+    `.color` : set your cl_color live, in case you have duplicated colors, usage: `.color 2`  
+
 * Leveraged from [CS2Fixes](https://github.com/Source2ZE/CS2Fixes/)  
   `c_reload_admins`: console command to reload admins.cfg  
   `.ban <player> <duration/0 (permanent)>`: ban a player  
