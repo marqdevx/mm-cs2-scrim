@@ -43,6 +43,11 @@ enum class ETargetType {
 	CT,
 };
 
+struct t_throw{
+	Vector lastThrow_position;
+	QAngle lastThrow_rotation;
+};
+
 class ZEPlayer
 {
 public:
@@ -68,8 +73,6 @@ public:
 		m_bInGame = false;
 		m_iMZImmunity = 0; // out of 100
 		m_flNominateTime = -60.0f;
-
-		lastThrow_position = Vector(0,0,0);
 	}
 
 	~ZEPlayer()
@@ -133,11 +136,7 @@ public:
 	void CheckAdmin();
 	void CheckInfractions();
 
-	
-
-	Vector lastThrow_position;
-	QAngle lastThrow_rotation;
-
+	CUtlVector<t_throw> grenade_throws;
 
 private:
 	bool m_bAuthenticated;
